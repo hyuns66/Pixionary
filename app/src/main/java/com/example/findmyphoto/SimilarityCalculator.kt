@@ -3,7 +3,7 @@ package com.example.findmyphoto
 import android.util.Log
 import kotlin.math.sqrt
 
-class SimilarityCalculator(var query : Array<FloatArray>) {
+class SimilarityCalculator(private var query : Array<FloatArray>) {
     init {
         query = normalizeVector(query)
     }
@@ -34,5 +34,28 @@ class SimilarityCalculator(var query : Array<FloatArray>) {
             }
         }
         return normalizedArray
+    }
+
+    fun dotProduct(vec1: FloatArray, vec2: FloatArray): Float {
+        var dotProd = 0f
+        for (i in vec1.indices) {
+            dotProd += vec1[i] * vec2[i]
+        }
+        return dotProd
+    }
+
+    fun magnitude(vec: FloatArray): Float {
+        var sum = 0f
+        for (v in vec) {
+            sum += v * v
+        }
+        return sqrt(sum)
+    }
+
+    fun cosineSimilarity(vec1: FloatArray, vec2: FloatArray): Float {
+        val dotProd = dotProduct(vec1, vec2)
+        val magnitude1 = magnitude(vec1)
+        val magnitude2 = magnitude(vec2)
+        return dotProd / (magnitude1 * magnitude2)
     }
 }
