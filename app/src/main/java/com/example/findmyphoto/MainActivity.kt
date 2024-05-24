@@ -35,19 +35,18 @@ class MainActivity : AppCompatActivity() {
         val bitmapList = arrayListOf<Bitmap>()
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
-        for (imgID in imgList){
+        for (imgID in imgList) {
             val bitmap = BitmapFactory.decodeResource(this.resources, imgID, bmpFactoryOption)
             bitmapList.add(bitmap)
         }
 
-//        val textRunner = TextTransformerRunner()
-//        val returns = textRunner.runSession(arrayListOf("my name is king."))
-//
-//        visionRunner.runSession(bitmapList)
+        val textRunner = TextTransformerRunner()
+        val returns = textRunner.runSession(arrayListOf("love couple"))
 
-        val returns = arrayOf(floatArrayOf(3f, 4f, 5f))
-        val calc = SimilarityCalculator(returns)
-        calc.normalizeVector(returns)
+        val returns_img = visionRunner.runSession(bitmapList)
+
+        val calc = SimilarityCalculator(returns, returns_img)
+        calc.run()
     }
 
     override fun onDestroy() {

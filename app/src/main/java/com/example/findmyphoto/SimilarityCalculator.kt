@@ -1,11 +1,13 @@
 package com.example.findmyphoto
 
 import android.util.Log
+import android.widget.Toast
 import kotlin.math.sqrt
 
-class SimilarityCalculator(private var query : Array<FloatArray>) {
+class SimilarityCalculator(private var query : Array<FloatArray>, private var imageFeatures : Array<FloatArray>) {
     init {
         query = normalizeVector(query)
+        imageFeatures = normalizeVector(imageFeatures)
     }
 
     // vector의 batch 수에 맞게 l2Norm을 구해 배열로 반환
@@ -57,5 +59,18 @@ class SimilarityCalculator(private var query : Array<FloatArray>) {
         val magnitude1 = magnitude(vec1)
         val magnitude2 = magnitude(vec2)
         return dotProd / (magnitude1 * magnitude2)
+    }
+
+    fun run(){
+        val sims = arrayListOf<Float>()
+        for (feature in imageFeatures){
+            val similarity = cosineSimilarity(query[0], feature)
+            sims.add(similarity)
+        }
+        Toast.makeText(ApplicationClass.getContext() , sims.indexOf(sims.max()).toString(), Toast.LENGTH_SHORT).show()
+    }
+
+    fun setImgFeatures(){
+        // TODO : 갤러리 연동
     }
 }
