@@ -7,6 +7,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
@@ -14,71 +17,102 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import coil.imageLoader
+import coil.load
 import com.example.findmyphoto.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import java.io.File
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding : ActivityMainBinding
-    lateinit var returns_img : Array<FloatArray>
-    private val galleryModel by viewModels<GalleryViewModel>()
+    private val galleryModel by viewModels<GalleryViewModel>{
+        val visionTransformerRunner = VisionTransformerRunner()
+        val featureRepository = FeatureRepository(ApplicationClass.getFeatureStore())
+        GalleryViewModel.provideFactory(visionTransformerRunner, featureRepository)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val imgList = arrayListOf(
-            R.drawable.img_1,
-            R.drawable.img_2,
-            R.drawable.img_3,
-            R.drawable.img_4,
-            R.drawable.img_5,
-            R.drawable.img_6,
-            R.drawable.img_7,
-            R.drawable.img_8,
-            R.drawable.img_9,
-            R.drawable.img_10,
-            R.drawable.img_11,
-            R.drawable.img_12
+        val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
+        val displayWidth = displayMetrics!!.widthPixels
+        val imagePreviewAdapter = ImagePreviewRVAdapter(
+            displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
         )
-
+        galleryModel.imageItemPaths.observe(this){
+            imagePreviewAdapter.initImagePaths(it)
+        }
         binding.searchEt.setOnEditorActionListener { v, actionId, event ->
             var handled = false
-            if (actionId == EditorInfo.IME_ACTION_SEARCH){
-                searchImage(v.text.toString(), imgList)
+            val imageFeatures = galleryModel.getImageFeaturesVector()
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val similarities = searchImage(v.text.toString(), imageFeatures)
+                galleryModel.updateImagePaths(similarities)
+                handled = true
             }
             handled
         }
-
-        binding.show.visibility = View.GONE
-        binding.show.setOnClickListener {
-            it.visibility = View.GONE
+        binding.mainSearchIv.setOnClickListener {
+            val progressDialog = DialogFeatureExtractProgress(this)
+            progressDialog.isCancelable = false
+            progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
+            // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
+            progressDialog.setOnDismissListener {
+                galleryModel.featureProgressCount.removeObservers(this)
+            }
+            val totalCount = galleryModel.imageItemPaths.value!!.size
+            galleryModel.featureProgressCount.observe(this){
+                progressDialog.updateProgress(it, totalCount)
+                if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+                    progressDialog.dismiss()
+                }
+            }
+            galleryModel.extractFeatures(this)
         }
-
-        val visionRunner = VisionTransformerRunner()
-        val bitmapList = arrayListOf<Bitmap>()
-        val bmpFactoryOption = BitmapFactory.Options()
-        bmpFactoryOption.inScaled = false
-        for (imgID in imgList) {
-            val bitmap = BitmapFactory.decodeResource(this.resources, imgID, bmpFactoryOption)
-            bitmapList.add(bitmap)
-        }
-
-        returns_img = visionRunner.runSession(bitmapList)
 
         // 권한이 있는지 확인하고, 없으면 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
             if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
                 galleryModel.fetchImageItemList(this)
             } else {
-                requestPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES, REQUEST_CODE_READ_MEDIA_IMAGES)
+                requestPermission(
+                    this,
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    REQUEST_CODE_READ_MEDIA_IMAGES
+                )
             }
         } else { // Android 13 미만
             if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 galleryModel.fetchImageItemList(this)
             } else {
-                requestPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE, REQUEST_CODE_READ_EXTERNAL_STORAGE)
+                requestPermission(
+                    this,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    REQUEST_CODE_READ_EXTERNAL_STORAGE
+                )
             }
+        }
+
+        binding.imagePreviewRv.apply {
+//            val preloadingCount = ImagePreviewRVAdapter.SPAN_COUNT * 20 // 사용자가 스크롤하는 동안 미리 로딩할 이미지의 수
+            adapter = imagePreviewAdapter
+            layoutManager = GridLayoutManager(
+                this@MainActivity,
+                ImagePreviewRVAdapter.SPAN_COUNT
+            )
+//            ).apply {
+//                initialPrefetchItemCount = preloadingCount
+//            }
+            setItemViewCacheSize(ImagePreviewRVAdapter.SPAN_COUNT * 20)
+            setHasFixedSize(true)   // 리사이클러뷰 크기 고정 (아이템 수에 변화가 없기 때문에 사용)
+            itemAnimator = null   // 애니메이션 제거
         }
     }
 
@@ -86,14 +120,12 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun searchImage(query : String, imgList : ArrayList<Int>){
+    private fun searchImage(query : String, imgFeatures : Array<FloatArray>) : ArrayList<Float>{
         val textRunner = TextTransformerRunner()
         val returns = textRunner.runSession(arrayListOf(query))
 
-        val calc = SimilarityCalculator(returns, returns_img)
-        val answer_idx = calc.run()
-        binding.show.setImageResource(imgList[answer_idx])
-        binding.show.visibility = View.VISIBLE
+        val calc = SimilarityCalculator(returns, imgFeatures)
+        return calc.run()
     }
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -115,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                     // 권한이 거부됨
                     Toast.makeText(this, "권한이 거부되었습니다. 앱을 사용하려면 권한이 필요합니다.", Toast.LENGTH_SHORT)
                         .show()
+                    exitProcess(0)
                 }
             }
         }

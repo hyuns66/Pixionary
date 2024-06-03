@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.findmyphoto"
-        minSdk = 30
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -54,4 +54,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("androidx.fragment:fragment-ktx:1.7.1")
+    // ImageLoader
+    implementation("io.coil-kt:coil:2.6.0")
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.google.code.gson:gson:2.11.0")
 }

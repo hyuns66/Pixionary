@@ -61,13 +61,13 @@ class SimilarityCalculator(private var query : Array<FloatArray>, private var im
         return dotProd / (magnitude1 * magnitude2)
     }
 
-    fun run() : Int{
+    fun run() : ArrayList<Float>{
         val sims = arrayListOf<Float>()
         for (feature in imageFeatures){
             val similarity = cosineSimilarity(query[0], feature)
             sims.add(similarity)
         }
-        return sims.indexOf(sims.max())
+        return sims
     }
 
     fun setImgFeatures(){

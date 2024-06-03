@@ -42,122 +42,14 @@
         app:layout_constraintTop_toTopOf="@id/search_bg"
         app:layout_constraintBottom_toBottomOf="@id/search_bg"
         app:layout_constraintEnd_toEndOf="@id/search_bg"/>
-    
-    <GridLayout
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/image_preview_rv"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:columnCount="3"
-        app:layout_constraintTop_toBottomOf="@id/search_bg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_1"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_2"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_3"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_4"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_5"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_6"/>
-
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_row="0"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_7" />
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_8"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_9"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_10"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_11"/>
-
-        <ImageView
-            android:layout_height="0dp"
-            android:layout_width="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:scaleType="fitCenter"
-            android:src="@drawable/img_12"/>
-
-    </GridLayout>
-
-    <ImageView
-        android:id="@+id/show"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/search_bg"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
