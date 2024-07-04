@@ -1,7 +1,5 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
-import android.util.Log
-import android.widget.Toast
 import kotlin.math.sqrt
 
 class SimilarityCalculator(private var query : Array<FloatArray>, private var imageFeatures : Array<FloatArray>) {

@@ -1,20 +1,14 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.graphics.Bitmap
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import coil.size.Size
-import coil.size.SizeResolver
-import com.example.findmyphoto.databinding.ItemGalleryPreviewBinding
+import com.example.pixionary.databinding.ItemGalleryPreviewBinding
 
 class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePreviewRVAdapter.ViewHolder>() {
 

@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.findmyphoto"
+    namespace = "com.example.pixionary"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.findmyphoto"
+        applicationId = "com.example.pixionary"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

@@ -1,11 +1,10 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import coil.ImageLoader
-import coil.ImageLoaderFactory
 
 class ApplicationClass : Application() {
     private lateinit var appContext: Context

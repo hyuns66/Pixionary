@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">FindMyPhoto</string>
+    <string name="app_name">Pixionary</string>
     <string name="progress_count">%1$d / %2$d</string>
 </resources>

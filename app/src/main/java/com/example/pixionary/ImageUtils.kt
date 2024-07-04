@@ -1,9 +1,6 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
-import ai.onnxruntime.OnnxTensor
 import android.graphics.*
-import java.nio.FloatBuffer
-import java.util.Collections
 
 open class ImageUtils() {
     fun centerCrop(bitmap : Bitmap, cropWidth : Int, cropHeight : Int) : Bitmap{

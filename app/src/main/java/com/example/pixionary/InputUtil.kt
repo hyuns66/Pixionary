@@ -1,6 +1,4 @@
-package com.example.findmyphoto
-
-import ai.onnxruntime.OnnxTensor
+package com.example.pixionary
 
 interface InputUtil<T> {
     fun preprocess(data : T) : IntArray

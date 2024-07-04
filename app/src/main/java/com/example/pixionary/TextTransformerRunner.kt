@@ -1,4 +1,4 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -13,7 +13,7 @@ import java.nio.LongBuffer
 
 class TextTransformerRunner : InputUtil<String> {
     private lateinit var ortEnvironment : OrtEnvironment
-    private val tokenizer = SimpleTokenizer()
+    private val tokenizer = BPETokenizer()
     private lateinit var textTransformerSession : OrtSession
 
     fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {

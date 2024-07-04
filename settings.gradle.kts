@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FindMyPhoto"
+rootProject.name = "Pixionary"
 include(":app")
