@@ -1,4 +1,4 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -7,13 +7,10 @@ import ai.onnxruntime.OrtSession
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.core.graphics.get
-import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.FloatBuffer
-import java.text.DecimalFormat
 import java.util.Collections
 
 class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){

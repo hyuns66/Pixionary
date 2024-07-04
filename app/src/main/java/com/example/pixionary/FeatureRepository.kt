@@ -1,9 +1,7 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.content.SharedPreferences
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.io.File
 
 class FeatureRepository(private val featureStore : SharedPreferences) {
     fun saveFeature(key: String, value: FloatArray) {

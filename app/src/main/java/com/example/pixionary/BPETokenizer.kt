@@ -1,13 +1,12 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.util.Log
-import java.lang.Integer.max
 import java.lang.Math.min
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 
-class SimpleTokenizer {
+class BPETokenizer {
 
     var encoder : Map<String, Int>
     var bpeRanks : Map<Pair<String, String>, Int>
@@ -22,6 +21,8 @@ class SimpleTokenizer {
     }
 
     fun ord(c: Char): Int = c.code
+
+    // 바이트 값(정수)과 해당 유니코드 문자 간의 매핑을 생성
     fun bytesToUnicode(): Map<Int, Char> {
         val bs: MutableList<Int> = mutableListOf()
 
@@ -56,9 +57,9 @@ class SimpleTokenizer {
 
         fileInputStream.use { inputStream ->
             val merges = inputStream.reader(Charset.defaultCharset()).readText().split('\n')
-            return merges.drop(1).take(49152 - 256 - 2).map {
-                val parts = it.split(" ")
-                parts[0] to parts[1]
+            return merges.drop(1).take(49152 - 256 - 2).map {   // it : "i n", "t h", "a n"
+                val parts = it.split(" ")       // "i n" -> ["i", "n"]
+                parts[0] to parts[1]        // ["i", "n"] -> Pair("i", "n")
             }
         }
     }
@@ -87,7 +88,7 @@ class SimpleTokenizer {
         if (cache.containsKey(token)) {
             return cache[token]!!
         }
-        // 'king' -> ('k', 'i', 'n', 'g</w>')
+        // 'king' -> ['k', 'i', 'n', 'g</w>']
         var word = mutableListOf<String>()
         for ((index, text) in token.withIndex()){
             var w = text.toString()
@@ -96,7 +97,7 @@ class SimpleTokenizer {
             }
             word.add(w)
         }
-        // ('k', 'i', 'n', 'g</w>') -> {('k', 'i'), ('i', 'n'), ('n', 'g</w>')}
+        // ['k', 'i', 'n', 'g</w>'] -> {('k', 'i'), ('i', 'n'), ('n', 'g</w>')}
         var pairs = getPairs(word)
         if (pairs.isEmpty()) {
             return token + "</w>"
@@ -111,6 +112,7 @@ class SimpleTokenizer {
             val new_word = mutableListOf<String>()
             var i = 0
             Log.d("word", word.toString())
+            // ['k', 'i', 'n', 'g</w>'] -> ['k', 'in', 'g</w>'] : merge 가능한 쌍 merge 해서 새로운 리스트 생성
             while(i < word.size){
                 try{
                     for(j in i..word.size){   // catch문에서 적절한 처리하기위해 마지막까지 first 못찾는 경우 일부러 outOfBoundsException 일으킴
@@ -141,7 +143,8 @@ class SimpleTokenizer {
                 pairs = getPairs(word)
             }
         }
-        val result_word = ' ' + word[0]
+        // ['k', 'in', 'g</w>'] -> "k in g<\w>"
+        val result_word = word.joinToString(" ")
         cache[token] = result_word
         Log.d("word_result", result_word)
         return result_word

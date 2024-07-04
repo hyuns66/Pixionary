@@ -1,16 +1,10 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -18,13 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import coil.imageLoader
-import coil.load
-import com.example.findmyphoto.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import java.io.File
+import com.example.pixionary.databinding.ActivityMainBinding
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {

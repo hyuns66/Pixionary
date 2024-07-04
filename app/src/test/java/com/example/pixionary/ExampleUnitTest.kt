@@ -1,4 +1,4 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import org.junit.Test
 

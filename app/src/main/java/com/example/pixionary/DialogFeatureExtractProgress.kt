@@ -1,4 +1,4 @@
-package com.example.findmyphoto
+package com.example.pixionary
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -7,12 +7,11 @@ import android.content.DialogInterface
 import android.graphics.Point
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
+import com.example.findmyphoto.R
 import com.example.findmyphoto.databinding.DialogFeatureExtractProgressBinding
+import com.example.pixionary.databinding.DialogFeatureExtractProgressBinding
 
 class DialogFeatureExtractProgress(private val context : Context) : DialogFragment() {
     private var _binding: DialogFeatureExtractProgressBinding? = null
