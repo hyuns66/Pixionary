@@ -9,8 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
-import com.example.findmyphoto.R
-import com.example.findmyphoto.databinding.DialogFeatureExtractProgressBinding
 import com.example.pixionary.databinding.DialogFeatureExtractProgressBinding
 
 class DialogFeatureExtractProgress(private val context : Context) : DialogFragment() {
