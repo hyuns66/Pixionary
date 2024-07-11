@@ -7,36 +7,67 @@ import ai.onnxruntime.OrtSession
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
+import android.widget.Toast
+import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.ByteBuffer
 import java.nio.FloatBuffer
 import java.util.Collections
+import kotlin.system.exitProcess
 
 class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 
     private lateinit var ortEnvironment : OrtEnvironment
+    private lateinit var interpreter : Interpreter
 
     //    private lateinit var visionTransformerByte : ByteArray
     private lateinit var visionTransformerSession : OrtSession
 
-    fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
-        try {
-            val inputStream: InputStream = resources.openRawResource(rawResourceId)
-            val outputStream = ByteArrayOutputStream()
-            val buffer = ByteArray(4096)
-            var bytesRead: Int
+//    fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
+//        try {
+//            val inputStream: InputStream = resources.openRawResource(rawResourceId)
+//            val outputStream = ByteArrayOutputStream()
+//            val buffer = ByteArray(4096)
+//            var bytesRead: Int
+//
+//            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+//                outputStream.write(buffer, 0, bytesRead)
+//            }
+//
+//            return outputStream.toByteArray()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//            Log.d("read_VisionTransformer_ERROR", "check readONNXModelFromRaw method.")
+//        }
+//        return null
+//    }
 
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-            }
+    fun loadModelFile(resources: Resources, rawResourceId: Int): ByteBuffer {
+        val inputStream: InputStream = resources.openRawResource(rawResourceId)
+        val fileDescriptor = resources.openRawResourceFd(rawResourceId)
+        val fileChannel = fileDescriptor.createInputStream().channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
 
-            return outputStream.toByteArray()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Log.d("read_VisionTransformer_ERROR", "check readONNXModelFromRaw method.")
+        val buffer: ByteBuffer = ByteBuffer.allocateDirect(declaredLength.toInt())
+        fileChannel.use { channel ->
+            channel.position(startOffset)
+            channel.read(buffer)
         }
-        return null
+        buffer.flip()
+        return buffer
+    }
+
+    private fun getTfliteInterpreter(): Interpreter {
+        try {
+            return Interpreter(loadModelFile(ApplicationClass.getContext().resources, R.raw.mobile_text_quant_12_float32))
+        } catch (e: Exception) {
+            Toast.makeText(ApplicationClass.getContext(), "어플리케이션 런타임 환경 초기화에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+            exitProcess(-1)
+        }
     }
 
     override fun preprocess(data: Bitmap): IntArray {
@@ -95,7 +126,7 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 
     override fun runSession(dataList: ArrayList<Bitmap>) : Array<FloatArray> {
         try{
-            initializeRuntime()
+            interpreter = getTfliteInterpreter()
             val inputTensor = makeBatchData(dataList)
             Log.d("sizeee", inputTensor.info.toString())
             inputTensor.floatBuffer
@@ -109,24 +140,23 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         }
     }
 
-    fun initializeRuntime(){
-        ortEnvironment = OrtEnvironment.getEnvironment(OrtLoggingLevel.ORT_LOGGING_LEVEL_FATAL)
-        // 세션 옵션 설정
-        val sessionOptions = OrtSession.SessionOptions()
-        val modelRawBytes = readONNXModelFromRaw(ApplicationClass.getContext().resources, R.raw.mobile_vision_quant)
-
-        // ONNX 모델을 세션으로 로드
-        modelRawBytes?.let {
-            visionTransformerSession = ortEnvironment.createSession(it, sessionOptions)
-        } ?: run{
-            Log.e("ModelLoading", "Failed to load the ONNX model.")
-            throw IllegalStateException("Failed to load the ONNX model.")
-        }
-    }
+//    fun initializeRuntime(){
+//        ortEnvironment = OrtEnvironment.getEnvironment(OrtLoggingLevel.ORT_LOGGING_LEVEL_FATAL)
+//        // 세션 옵션 설정
+//        val sessionOptions = OrtSession.SessionOptions()
+//        val modelRawBytes = readONNXModelFromRaw(ApplicationClass.getContext().resources, R.raw.mobile_vision_quant)
+//
+//        // ONNX 모델을 세션으로 로드
+//        modelRawBytes?.let {
+//            visionTransformerSession = ortEnvironment.createSession(it, sessionOptions)
+//        } ?: run{
+//            Log.e("ModelLoading", "Failed to load the ONNX model.")
+//            throw IllegalStateException("Failed to load the ONNX model.")
+//        }
+//    }
 
     fun destroyRuntime(){
-        visionTransformerSession.close() // OrtSession을 닫습니다.
-        ortEnvironment.close()
+        interpreter.close()
     }
 
     companion object{

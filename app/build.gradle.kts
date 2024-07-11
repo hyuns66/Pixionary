@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.pixionary"
-        minSdk = 26
+        minSdk = 27
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -46,6 +46,11 @@ dependencies {
     // onnx runtime
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.1")
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.9.0")
+    // tensorflow lite
+    implementation ("org.tensorflow:tensorflow-lite:+")
+    // Import the GPU delegate plugin Library for GPU inference
+    implementation ("org.tensorflow:tensorflow-lite-gpu-delegate-plugin:0.4.0")
+    implementation ("org.tensorflow:tensorflow-lite-gpu:2.9.0")
     // Test
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

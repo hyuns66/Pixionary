@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.MediaStore.Images.Media.getBitmap
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -83,6 +84,7 @@ class GalleryViewModel(
             }
         }
         _imageItemPaths.value = paths
+        Log.d("asdfpaths", paths.size.toString())
     }
 
     fun extractFeatures(context : Context){
