@@ -8,22 +8,27 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
+import com.example.pixionary.TextTransformerRunner.Companion.MODEL_NAME
 import org.tensorflow.lite.Interpreter
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import java.util.Collections
 import kotlin.system.exitProcess
 
 class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 
-    private lateinit var ortEnvironment : OrtEnvironment
+//    private lateinit var ortEnvironment : OrtEnvironment
     private lateinit var interpreter : Interpreter
 
     //    private lateinit var visionTransformerByte : ByteArray
-    private lateinit var visionTransformerSession : OrtSession
+//    private lateinit var visionTransformerSession : OrtSession
 
 //    fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
 //        try {
@@ -44,26 +49,24 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 //        return null
 //    }
 
-    fun loadModelFile(resources: Resources, rawResourceId: Int): ByteBuffer {
-        val inputStream: InputStream = resources.openRawResource(rawResourceId)
-        val fileDescriptor = resources.openRawResourceFd(rawResourceId)
-        val fileChannel = fileDescriptor.createInputStream().channel
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
+    fun loadModelFile(modelName : String): MappedByteBuffer {
+        val assetFileDescriptor = ApplicationClass.getContext().assets.openFd(modelName)
+        val fileInputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
+        val fileChannel = fileInputStream.channel
+        val startOffset = assetFileDescriptor.startOffset
+        val declaredLength = assetFileDescriptor.declaredLength
 
-        val buffer: ByteBuffer = ByteBuffer.allocateDirect(declaredLength.toInt())
-        fileChannel.use { channel ->
-            channel.position(startOffset)
-            channel.read(buffer)
-        }
-        buffer.flip()
-        return buffer
+
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
 
     private fun getTfliteInterpreter(): Interpreter {
         try {
-            return Interpreter(loadModelFile(ApplicationClass.getContext().resources, R.raw.mobile_text_quant_12_float32))
+            val model = loadModelFile(MODEL_NAME)
+            model.order(ByteOrder.nativeOrder())
+            return Interpreter(model)
         } catch (e: Exception) {
+            Log.e("runtime textModel failed initializing", e.toString())
             Toast.makeText(ApplicationClass.getContext(), "어플리케이션 런타임 환경 초기화에 실패했습니다.", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
             exitProcess(-1)
@@ -86,15 +89,15 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         return bmpData
     }
 
-    override fun makeBatchData(dataList: ArrayList<Bitmap>): OnnxTensor {
+    override fun makeBatchData(dataList: ArrayList<Bitmap>): FloatBuffer {
         val imgData = FloatBuffer.allocate(
             BATCH_SIZE
-                    * CHANNEL_SIZE
-                    * IMAGE_SIZE_X
                     * IMAGE_SIZE_Y
+                    * IMAGE_SIZE_X
+                    * CHANNEL_SIZE
         )
         imgData.rewind()
-        val stride = IMAGE_SIZE_X * IMAGE_SIZE_Y
+//        val stride = IMAGE_SIZE_X * IMAGE_SIZE_Y
 
         for (b in 0 until BATCH_SIZE){
             val bmpData = preprocess(dataList[b])
@@ -107,33 +110,47 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
                     val idx = (IMAGE_SIZE_Y * h) + w
                     val batch = (IMAGE_SIZE_X * IMAGE_SIZE_Y * CHANNEL_SIZE * b)
                     val pixelValue = bmpData[idx]
-                    imgData.put(batch + idx, (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f))          // R
-                    imgData.put(batch + idx + stride, (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f))    // G
-                    imgData.put(batch + idx + stride * 2, (((pixelValue and 0xFF) / 255f - 0.40821072f) / 0.2757771f))     // B
+                    // B C H W shape
+//                    imgData.put(batch + idx, (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f))          // R
+//                    imgData.put(batch + idx + stride, (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f))    // G
+//                    imgData.put(batch + idx + stride * 2, (((pixelValue and 0xFF) / 255f - 0.40821072f) / 0.2757771f))     // B
+                    // B H W C shape
+                    imgData.put(batch + CHANNEL_SIZE*idx, (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f))      // R
+                    imgData.put(batch + CHANNEL_SIZE*idx + 1, (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f))     // G
+                    imgData.put(batch + CHANNEL_SIZE*idx + 2, (((pixelValue and 0xFF) / 255f - 0.40821072f) / 0.2757771f))          // B
                 }
             }
         }
         imgData.rewind()
 
-        val shape = longArrayOf(
-            BATCH_SIZE.toLong(),
-            CHANNEL_SIZE.toLong(),
-            IMAGE_SIZE_Y.toLong(),
-            IMAGE_SIZE_X.toLong()
-        )
-        return OnnxTensor.createTensor(ortEnvironment, imgData, shape)
+        return imgData
     }
 
     override fun runSession(dataList: ArrayList<Bitmap>) : Array<FloatArray> {
         try{
             interpreter = getTfliteInterpreter()
+//            initializeRuntime()
             val inputTensor = makeBatchData(dataList)
-            Log.d("sizeee", inputTensor.info.toString())
-            inputTensor.floatBuffer
-            val inputName = visionTransformerSession.inputNames.iterator().next()
-            val resultTensor = visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
-            val outputs = resultTensor.get(0).value as Array<FloatArray> // [1 84 8400]
-            return outputs
+//            Log.d("sizeee", inputTensor.info.toString())
+//            inputTensor.floatBuffer
+//            val inputName = visionTransformerSession.inputNames.iterator().next()
+//            val resultTensor = visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
+            // 출력 배열 준비
+            val outputBuffer = FloatBuffer.allocate(BATCH_SIZE * RESULT_LENGTH)
+            interpreter.run(inputTensor, outputBuffer)
+//            val outputs = resultTensor.get(0).value as Array<FloatArray> // [1 84 8400]
+            // Rewind the buffer to read from the beginning
+            outputBuffer.rewind()
+
+            // Convert FloatBuffer to Array<FloatArray>
+            val outputArray = Array(BATCH_SIZE) { FloatArray(RESULT_LENGTH) }
+
+            for (i in 0 until BATCH_SIZE) {
+                for (j in 0 until RESULT_LENGTH) {
+                    outputArray[i][j] = outputBuffer.get()
+                }
+            }
+            return outputArray
 //        val results = dataProcess.outputsToNPMSPredictions(outputs)
         } finally {
             destroyRuntime()
@@ -164,5 +181,7 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         const val CHANNEL_SIZE = 3;
         const val IMAGE_SIZE_X = 224;
         const val IMAGE_SIZE_Y = 224;
+        const val RESULT_LENGTH = 512
+        const val MODEL_NAME = "mobile_vision_model_dynamic_range_quant.tflite"
     }
 }
