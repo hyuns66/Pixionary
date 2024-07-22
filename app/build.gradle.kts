@@ -48,6 +48,7 @@ dependencies {
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.9.0")
     // tensorflow lite
     implementation ("org.tensorflow:tensorflow-lite:2.16.1")
+    implementation ("org.tensorflow:tensorflow-lite-support:0.4.3")
     // Import the GPU delegate plugin Library for GPU inference
     implementation ("org.tensorflow:tensorflow-lite-gpu-delegate-plugin:0.4.0")
     implementation ("org.tensorflow:tensorflow-lite-gpu:2.9.0")

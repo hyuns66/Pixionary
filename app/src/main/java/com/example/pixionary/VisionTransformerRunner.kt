@@ -1,25 +1,16 @@
 package com.example.pixionary
 
-import ai.onnxruntime.OnnxTensor
-import ai.onnxruntime.OrtEnvironment
-import ai.onnxruntime.OrtLoggingLevel
-import ai.onnxruntime.OrtSession
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
-import com.example.pixionary.TextTransformerRunner.Companion.MODEL_NAME
 import org.tensorflow.lite.Interpreter
-import java.io.ByteArrayOutputStream
+import org.tensorflow.lite.gpu.CompatibilityList
+import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
-import java.util.Collections
 import kotlin.system.exitProcess
 
 class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
@@ -62,9 +53,22 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 
     private fun getTfliteInterpreter(): Interpreter {
         try {
+            val compatList = CompatibilityList()
+            val options = Interpreter.Options().apply{
+                if(compatList.isDelegateSupportedOnThisDevice){
+                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Success")
+                    // if the device has a supported GPU, add the GPU delegate
+                    val delegateOptions = compatList.bestOptionsForThisDevice
+                    this.addDelegate(GpuDelegate(delegateOptions))
+                } else {
+                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Fail")
+                    // if the GPU is not supported, run on 4 threads
+                    this.numThreads = 4
+                }
+            }
             val model = loadModelFile(MODEL_NAME)
             model.order(ByteOrder.nativeOrder())
-            return Interpreter(model)
+            return Interpreter(model, options)
         } catch (e: Exception) {
             Log.e("runtime textModel failed initializing", e.toString())
             Toast.makeText(ApplicationClass.getContext(), "어플리케이션 런타임 환경 초기화에 실패했습니다.", Toast.LENGTH_SHORT).show()
@@ -182,6 +186,6 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         const val IMAGE_SIZE_X = 224;
         const val IMAGE_SIZE_Y = 224;
         const val RESULT_LENGTH = 512
-        const val MODEL_NAME = "mobile_vision_model_dynamic_range_quant.tflite"
+        const val MODEL_NAME = "mobile_vision.tflite"
     }
 }
