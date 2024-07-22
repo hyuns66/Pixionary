@@ -13,12 +13,12 @@ import java.io.InputStream
 import java.nio.FloatBuffer
 import java.util.Collections
 
-class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
+class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
 
-    private lateinit var ortEnvironment : OrtEnvironment
+    private lateinit var ortEnvironment: OrtEnvironment
 
     //    private lateinit var visionTransformerByte : ByteArray
-    private lateinit var visionTransformerSession : OrtSession
+    private lateinit var visionTransformerSession: OrtSession
 
     fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
         try {
@@ -45,9 +45,20 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
 
         val resizedBitmap = resizeFitShort(data)
         val croppedBitmap = centerCrop(resizedBitmap, IMAGE_SIZE_X, IMAGE_SIZE_Y)
-        Log.d("sizeeeeeeeee", "(${data.width}, ${data.height}) -> (${resizedBitmap.width}, ${resizedBitmap.height}) -> (${croppedBitmap.width}, ${croppedBitmap.height}")
+        Log.d(
+            "sizeeeeeeeee",
+            "(${data.width}, ${data.height}) -> (${resizedBitmap.width}, ${resizedBitmap.height}) -> (${croppedBitmap.width}, ${croppedBitmap.height}"
+        )
 
-        croppedBitmap.getPixels(bmpData, 0, croppedBitmap.width, 0, 0, croppedBitmap.width, croppedBitmap.height)   // 비트맵 픽셀값 bmpData에 저장 row 단위로 저장
+        croppedBitmap.getPixels(
+            bmpData,
+            0,
+            croppedBitmap.width,
+            0,
+            0,
+            croppedBitmap.width,
+            croppedBitmap.height
+        )   // 비트맵 픽셀값 bmpData에 저장 row 단위로 저장
         bmpData.sliceArray(0 until 20).forEach {
             val red = (it shr 16) and 0xFF
             Log.d("sizee_data", "$red")
@@ -65,7 +76,7 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         imgData.rewind()
         val stride = IMAGE_SIZE_X * IMAGE_SIZE_Y
 
-        for (b in 0 until BATCH_SIZE){
+        for (b in 0 until BATCH_SIZE) {
             val bmpData = preprocess(dataList[b])
 
             // 데이터를 리틀 엔디안 순서로 적재 (Native order)
@@ -76,9 +87,18 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
                     val idx = (IMAGE_SIZE_Y * h) + w
                     val batch = (IMAGE_SIZE_X * IMAGE_SIZE_Y * CHANNEL_SIZE * b)
                     val pixelValue = bmpData[idx]
-                    imgData.put(batch + idx, (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f))          // R
-                    imgData.put(batch + idx + stride, (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f))    // G
-                    imgData.put(batch + idx + stride * 2, (((pixelValue and 0xFF) / 255f - 0.40821072f) / 0.2757771f))     // B
+                    imgData.put(
+                        batch + idx,
+                        (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f)
+                    )          // R
+                    imgData.put(
+                        batch + idx + stride,
+                        (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f)
+                    )    // G
+                    imgData.put(
+                        batch + idx + stride * 2,
+                        (((pixelValue and 0xFF) / 255f - 0.40821072f) / 0.2757771f)
+                    )     // B
                 }
             }
         }
@@ -93,14 +113,15 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         return OnnxTensor.createTensor(ortEnvironment, imgData, shape)
     }
 
-    override fun runSession(dataList: ArrayList<Bitmap>) : Array<FloatArray> {
-        try{
+    override fun runSession(dataList: ArrayList<Bitmap>): Array<FloatArray> {
+        try {
             initializeRuntime()
             val inputTensor = makeBatchData(dataList)
             Log.d("sizeee", inputTensor.info.toString())
             inputTensor.floatBuffer
             val inputName = visionTransformerSession.inputNames.iterator().next()
-            val resultTensor = visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
+            val resultTensor =
+                visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
             val outputs = resultTensor.get(0).value as Array<FloatArray> // [1 84 8400]
             return outputs
 //        val results = dataProcess.outputsToNPMSPredictions(outputs)
@@ -109,16 +130,17 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         }
     }
 
-    fun initializeRuntime(){
+    fun initializeRuntime() {
         ortEnvironment = OrtEnvironment.getEnvironment(OrtLoggingLevel.ORT_LOGGING_LEVEL_FATAL)
         // 세션 옵션 설정
         val sessionOptions = OrtSession.SessionOptions()
-        val modelRawBytes = readONNXModelFromRaw(ApplicationClass.getContext().resources, R.raw.mobile_vision_quant)
+        val modelRawBytes =
+            readONNXModelFromRaw(ApplicationClass.getContext().resources, R.raw.mobile_vision_quant)
 
         // ONNX 모델을 세션으로 로드
         modelRawBytes?.let {
             visionTransformerSession = ortEnvironment.createSession(it, sessionOptions)
-        } ?: run{
+        } ?: run {
             Log.e("ModelLoading", "Failed to load the ONNX model.")
             throw IllegalStateException("Failed to load the ONNX model.")
         }
@@ -130,9 +152,9 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
     }
 
     companion object{
-        const val BATCH_SIZE = 12;
-        const val CHANNEL_SIZE = 3;
-        const val IMAGE_SIZE_X = 224;
-        const val IMAGE_SIZE_Y = 224;
+        const val BATCH_SIZE = 12
+        const val CHANNEL_SIZE = 3
+        const val IMAGE_SIZE_X = 224
+        const val IMAGE_SIZE_Y = 224
     }
 }
