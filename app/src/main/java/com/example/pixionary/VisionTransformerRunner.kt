@@ -54,17 +54,20 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
     private fun getTfliteInterpreter(): Interpreter {
         try {
             val compatList = CompatibilityList()
+//            val options = Interpreter.Options().apply{
+//                if(compatList.isDelegateSupportedOnThisDevice){
+//                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Success")
+//                    // if the device has a supported GPU, add the GPU delegate
+//                    val delegateOptions = compatList.bestOptionsForThisDevice
+//                    this.addDelegate(GpuDelegate(delegateOptions))
+//                } else {
+//                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Fail")
+//                    // if the GPU is not supported, run on 4 threads
+//                    this.numThreads = 4
+//                }
+//            }
             val options = Interpreter.Options().apply{
-                if(compatList.isDelegateSupportedOnThisDevice){
-                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Success")
-                    // if the device has a supported GPU, add the GPU delegate
-                    val delegateOptions = compatList.bestOptionsForThisDevice
-                    this.addDelegate(GpuDelegate(delegateOptions))
-                } else {
-                    Log.d("GPGPGPGPGUGUUGPGUPUG", "GPU Delegate Fail")
-                    // if the GPU is not supported, run on 4 threads
-                    this.numThreads = 4
-                }
+                this.numThreads = 8
             }
             val model = loadModelFile(MODEL_NAME)
             model.order(ByteOrder.nativeOrder())
@@ -186,6 +189,6 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils(){
         const val IMAGE_SIZE_X = 224;
         const val IMAGE_SIZE_Y = 224;
         const val RESULT_LENGTH = 512
-        const val MODEL_NAME = "mobile_vision.tflite"
+        const val MODEL_NAME = "mobile_vision_model_dynamic_range_quant.tflite"
     }
 }
