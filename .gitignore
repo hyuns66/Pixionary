@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/src/main/assets/mobile_text.tflite
+/app/src/main/assets/mobile_vision.tflite
+/app/src/main/assets/mobile_vision_model_dynamic_range_quant.tflite
