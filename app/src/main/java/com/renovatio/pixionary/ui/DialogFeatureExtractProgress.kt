@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.ui
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -9,7 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
-import com.example.pixionary.databinding.DialogFeatureExtractProgressBinding
+import com.renovatio.pixionary.R
+import com.renovatio.pixionary.databinding.DialogFeatureExtractProgressBinding
 
 class DialogFeatureExtractProgress(private val context : Context) : DialogFragment() {
     private var _binding: DialogFeatureExtractProgressBinding? = null

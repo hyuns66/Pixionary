@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -16,6 +16,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.renovatio.pixionary.data.FeatureRepository
+import com.renovatio.pixionary.util.VisionTransformerRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
@@ -115,7 +117,9 @@ class GalleryViewModel(
                 }
                 bitmapList.clear()
                 pathList.clear()
-                _featureProgressCount.postValue(_featureProgressCount.value!!.plus(VisionTransformerRunner.BATCH_SIZE))
+                _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
+                    VisionTransformerRunner.BATCH_SIZE
+                ))
             }
         }
     }

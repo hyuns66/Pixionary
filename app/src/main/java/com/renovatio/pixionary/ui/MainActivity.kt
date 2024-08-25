@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.ui
 
 import android.app.Activity
 import android.content.Context
@@ -12,7 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.pixionary.databinding.ActivityMainBinding
+import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.data.FeatureRepository
+import com.renovatio.pixionary.util.SimilarityCalculator
+import com.renovatio.pixionary.util.TextTransformerRunner
+import com.renovatio.pixionary.util.VisionTransformerRunner
+import com.renovatio.pixionary.databinding.ActivityMainBinding
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {

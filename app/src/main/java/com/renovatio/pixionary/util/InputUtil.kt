@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.util
 
 interface InputUtil<T> {
     fun preprocess(data : T) : IntArray

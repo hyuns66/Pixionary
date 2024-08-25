@@ -1,6 +1,8 @@
-package com.example.pixionary
+package com.renovatio.pixionary.util
 
 import android.util.Log
+import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.R
 import java.lang.Math.min
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -53,7 +55,9 @@ class BPETokenizer {
     fun loadMerges(): List<Pair<String, String>> {
         // 안드로이드에서 파일 접근 시 Context를 사용하여 파일 경로를 얻습니다.
         // 예제에서는 경로를 직접 지정합니다. 실제 사용 시에는 적절한 파일 경로를 설정해야 합니다.
-        val fileInputStream = ApplicationClass.getContext().resources.openRawResource(bpeVocabFilePath)
+        val fileInputStream = ApplicationClass.getContext().resources.openRawResource(
+            bpeVocabFilePath
+        )
 
         fileInputStream.use { inputStream ->
             val merges = inputStream.reader(Charset.defaultCharset()).readText().split('\n')

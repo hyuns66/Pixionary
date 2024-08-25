@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary
 
 import org.junit.Test
 

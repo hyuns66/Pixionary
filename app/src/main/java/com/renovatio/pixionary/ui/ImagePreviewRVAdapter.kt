@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.ui
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.example.pixionary.databinding.ItemGalleryPreviewBinding
+import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.R
+import com.renovatio.pixionary.databinding.ItemGalleryPreviewBinding
 
 class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePreviewRVAdapter.ViewHolder>() {
 

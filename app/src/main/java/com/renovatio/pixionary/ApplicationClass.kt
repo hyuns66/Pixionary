@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary
 
 import android.app.Application
 import android.content.Context
@@ -19,7 +19,7 @@ class ApplicationClass : Application() {
             return instance.appContext
         }
 
-        fun getInstance() : ApplicationClass{
+        fun getInstance() : ApplicationClass {
             return instance
         }
 

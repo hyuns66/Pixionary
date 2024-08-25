@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.util
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -7,6 +7,8 @@ import ai.onnxruntime.OrtSession
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.util.Log
+import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.R
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -117,7 +119,6 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
         try {
             initializeRuntime()
             val inputTensor = makeBatchData(dataList)
-            Log.d("sizeee", inputTensor.info.toString())
             inputTensor.floatBuffer
             val inputName = visionTransformerSession.inputNames.iterator().next()
             val resultTensor =

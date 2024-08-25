@@ -1,4 +1,4 @@
-package com.example.pixionary
+package com.renovatio.pixionary.util
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -6,6 +6,8 @@ import ai.onnxruntime.OrtLoggingLevel
 import ai.onnxruntime.OrtSession
 import android.content.res.Resources
 import android.util.Log
+import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.R
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -107,7 +109,10 @@ class TextTransformerRunner : InputUtil<String> {
         ortEnvironment = OrtEnvironment.getEnvironment(OrtLoggingLevel.ORT_LOGGING_LEVEL_FATAL)
         // 세션 옵션 설정
         val sessionOptions = OrtSession.SessionOptions()
-        val modelRawBytes = readONNXModelFromRaw(ApplicationClass.getContext().resources, R.raw.mobile_text_quant)
+        val modelRawBytes = readONNXModelFromRaw(
+            ApplicationClass.getContext().resources,
+            R.raw.mobile_text_quant
+        )
 
         // ONNX 모델을 세션으로 로드
         modelRawBytes?.let {
