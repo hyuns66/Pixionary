@@ -51,10 +51,9 @@ class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePrev
         holder.bind(imagePaths[position], itemWidth, itemHeightPx)
     }
 
-    fun initImagePaths(newImgPaths : MutableList<String>){
+    fun initImagePaths(newImgPaths : List<String>){
         imagePaths.clear()
         imagePaths.addAll(newImgPaths)
-        Log.d("imagePaimimimimi", imagePaths[0])
         notifyDataSetChanged()
     }
 

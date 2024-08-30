@@ -1,11 +1,15 @@
 package com.renovatio.pixionary.util
 
+import com.renovatio.pixionary.domain.model.Feature
 import kotlin.math.sqrt
 
-class SimilarityCalculator(private var query : Array<FloatArray>, private var imageFeatures : Array<FloatArray>) {
+class SimilarityCalculator(private var query : Array<FloatArray>, private var imageFeatures : List<Feature>) {
     init {
         query = normalizeVector(query)
-        imageFeatures = normalizeVector(imageFeatures)
+        val normalizedFeatures = normalizeVector(imageFeatures.map{it.feature}.toTypedArray())
+        imageFeatures = imageFeatures.zip(normalizedFeatures).map {
+            Feature(it.first.path, it.second)
+        }
     }
 
     // vector의 batch 수에 맞게 l2Norm을 구해 배열로 반환
@@ -59,13 +63,15 @@ class SimilarityCalculator(private var query : Array<FloatArray>, private var im
         return dotProd / (magnitude1 * magnitude2)
     }
 
-    fun run() : ArrayList<Float>{
-        val sims = arrayListOf<Float>()
-        for (feature in imageFeatures){
-            val similarity = cosineSimilarity(query[0], feature)
-            sims.add(similarity)
+    fun run() : List<Feature>{
+        return imageFeatures.sortedByDescending {
+            cosineSimilarity(query[0], it.feature)
         }
-        return sims
+//        for (feature in imageFeatures){
+//            val similarity = cosineSimilarity(query[0], feature.feature)
+//            sims.add(similarity)
+//        }
+//        return sims
     }
 
     fun setImgFeatures(){

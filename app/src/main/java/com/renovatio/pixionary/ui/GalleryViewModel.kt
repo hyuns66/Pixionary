@@ -11,12 +11,16 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.MediaStore.Images.Media.getBitmap
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.renovatio.pixionary.data.FeatureRepository
+import com.renovatio.pixionary.domain.model.Feature
+import com.renovatio.pixionary.util.SimilarityCalculator
+import com.renovatio.pixionary.util.TextTransformerRunner
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,11 +30,11 @@ class GalleryViewModel(
     val visionRunner : VisionTransformerRunner,
     val featureStoreRepository: FeatureRepository
 ) : ViewModel() {
-    private val _imageItemList = MutableLiveData<MutableList<Array<Pair<String, Uri>?>>>(mutableListOf())
-    val imageItemList : LiveData<MutableList<Array<Pair<String, Uri>?>>> get() = _imageItemList
-    private val _imageItemPaths = MutableLiveData<MutableList<String>>(mutableListOf())
-    val imageItemPaths : LiveData<MutableList<String>> get() = _imageItemPaths
+    private val _imageItemUris = MutableLiveData<MutableList<Array<Pair<String, Uri>?>>>(mutableListOf())
+    val imageItemUris : LiveData<MutableList<Array<Pair<String, Uri>?>>> get() = _imageItemUris
     private val _featureProgressCount = MutableLiveData(0)
+    private val _searchResults = MutableLiveData<List<Feature>>(mutableListOf())
+    val searchResults : LiveData<List<Feature>> get() = _searchResults
     val featureProgressCount get() = _featureProgressCount
 
     /**
@@ -71,7 +75,7 @@ class GalleryViewModel(
                 uris[uriCnt] = Pair(mediaPath, Uri.fromFile(File(mediaPath)))
                 uriCnt += 1
                 if (uriCnt >= VisionTransformerRunner.BATCH_SIZE){
-                    imageItemList.value!!.add(uris.clone())
+                    _imageItemUris.value!!.add(uris.clone())
                     uriCnt = 0
                     for (i in uris.indices){
                         uris[i] = null
@@ -84,7 +88,9 @@ class GalleryViewModel(
                 }
             }
         }
-        _imageItemPaths.value = paths
+        _searchResults.value = paths.map {
+            Feature(it, floatArrayOf())
+        }
     }
 
     fun extractFeatures(context : Context){
@@ -93,7 +99,7 @@ class GalleryViewModel(
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
         viewModelScope.launch(Dispatchers.Default){
-            for (uris in imageItemList.value!!) {
+            for (uris in imageItemUris.value!!) {
                 for (uriPair in uris){
                     val path = uriPair!!.first
                     val uri = uriPair.second
@@ -112,9 +118,7 @@ class GalleryViewModel(
                 }
                 val features = visionRunner.runSession(bitmapList)
 
-                for (i in features.indices){
-                    featureStoreRepository.saveFeature(pathList[i], features[i])
-                }
+                featureStoreRepository.saveFeatures(pathList, features)
                 bitmapList.clear()
                 pathList.clear()
                 _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
@@ -124,17 +128,14 @@ class GalleryViewModel(
         }
     }
 
-    fun getImageFeaturesVector() : Array<FloatArray>{
-        val featureArray = Array(120){ FloatArray(1) }
-        for (i in imageItemPaths.value!!.indices){
-            featureArray[i] = featureStoreRepository.loadFeature(imageItemPaths.value!![i])
-        }
-        return featureArray
-    }
+    fun searchFeatures(query : String){
+        val imageFeatures = featureStoreRepository.loadFeatures()
+        Log.d("LILILISDfjlskd", imageFeatures.size.toString())
+        val textRunner = TextTransformerRunner()
+        val returns = textRunner.runSession(arrayListOf(query))
 
-    fun updateImagePaths(similarities : ArrayList<Float>){
-        val pairs = imageItemPaths.value!!.zip(similarities)
-        _imageItemPaths.value = pairs.sortedBy { -it.second }.map { it.first }.toMutableList()
+        val calc = SimilarityCalculator(returns, imageFeatures)
+        _searchResults.value = calc.run()
     }
     companion object {
         // The unique ID for a row.

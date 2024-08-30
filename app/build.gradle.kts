@@ -1,6 +1,10 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-android") // Only for Kotlin projects
+    id("kotlin-kapt") // Only for Kotlin projects
+    id("io.objectbox") // Apply last
+
 }
 
 android {

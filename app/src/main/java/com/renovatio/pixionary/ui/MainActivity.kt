@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -13,11 +14,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.data.FeatureDTO
 import com.renovatio.pixionary.data.FeatureRepository
-import com.renovatio.pixionary.util.SimilarityCalculator
-import com.renovatio.pixionary.util.TextTransformerRunner
+import com.renovatio.pixionary.data.ObjectBox
+import com.renovatio.pixionary.data.ObjectBox.store
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import com.renovatio.pixionary.databinding.ActivityMainBinding
+import com.renovatio.pixionary.domain.model.Feature
+import io.objectbox.kotlin.boxFor
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
@@ -25,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var binding : ActivityMainBinding
     private val galleryModel by viewModels<GalleryViewModel>{
         val visionTransformerRunner = VisionTransformerRunner()
-        val featureRepository = FeatureRepository(ApplicationClass.getFeatureStore())
+        val featureRepository = FeatureRepository(store.boxFor(FeatureDTO::class))
         GalleryViewModel.provideFactory(visionTransformerRunner, featureRepository)
     }
 
@@ -39,20 +43,19 @@ class MainActivity : AppCompatActivity() {
         val imagePreviewAdapter = ImagePreviewRVAdapter(
             displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
         )
-        galleryModel.imageItemPaths.observe(this){
-            imagePreviewAdapter.initImagePaths(it)
+        galleryModel.searchResults.observe(this){
+            imagePreviewAdapter.initImagePaths(it.map{ item -> item.path})
         }
         binding.searchEt.setOnEditorActionListener { v, actionId, event ->
             var handled = false
-            val imageFeatures = galleryModel.getImageFeaturesVector()
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val similarities = searchImage(v.text.toString(), imageFeatures)
-                galleryModel.updateImagePaths(similarities)
+                galleryModel.searchFeatures(v.text.toString())
                 handled = true
             }
             handled
         }
         binding.mainSearchIv.setOnClickListener {
+            Log.d("dialog status ", "start dialog")
             val progressDialog = DialogFeatureExtractProgress(this)
             progressDialog.isCancelable = false
             progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
@@ -60,9 +63,16 @@ class MainActivity : AppCompatActivity() {
             progressDialog.setOnDismissListener {
                 galleryModel.featureProgressCount.removeObservers(this)
             }
-            val totalCount = galleryModel.imageItemPaths.value!!.size
+            /*
+             * TODO: extractFeatures 매서드 수행 전 사전작업 필요
+             * 1. 데이터베이스에 존재하는 이미지와 실제 이미지 일치여부 확인해서 새로 fetch해야 하는 이미지 path만 솎아내기 -> totalCount
+             * 2. featureProgressCount 0으로 세팅
+             * 3. 아래 if문에서 적절히 dismiss 되도록 로직 수정
+            */
+            val totalCount = galleryModel.searchResults.value!!.size
             galleryModel.featureProgressCount.observe(this){
                 progressDialog.updateProgress(it, totalCount)
+                Log.d("dialog status ", it.toString())
                 if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
                     progressDialog.dismiss()
                 }
@@ -113,13 +123,13 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun searchImage(query : String, imgFeatures : Array<FloatArray>) : ArrayList<Float>{
-        val textRunner = TextTransformerRunner()
-        val returns = textRunner.runSession(arrayListOf(query))
-
-        val calc = SimilarityCalculator(returns, imgFeatures)
-        return calc.run()
-    }
+//    private fun searchImage(query : String, imgFeatures : List<Feature>) : List<Feature>{
+//        val textRunner = TextTransformerRunner()
+//        val returns = textRunner.runSession(arrayListOf(query))
+//
+//        val calc = SimilarityCalculator(returns, imgFeatures)
+//        return calc.run()
+//    }
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }

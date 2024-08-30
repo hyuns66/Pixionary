@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import coil.ImageLoader
+import com.renovatio.pixionary.data.ObjectBox
 
 class ApplicationClass : Application() {
     private lateinit var appContext: Context
@@ -46,5 +47,6 @@ class ApplicationClass : Application() {
             .bitmapConfig(Bitmap.Config.RGB_565)
             .allowRgb565(true)
             .build()
+        ObjectBox.init(getContext())
     }
 }
