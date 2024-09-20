@@ -69,10 +69,11 @@ class MainActivity : AppCompatActivity() {
              * 2. featureProgressCount 0으로 세팅
              * 3. 아래 if문에서 적절히 dismiss 되도록 로직 수정
             */
-            val totalCount = galleryModel.searchResults.value!!.size
+            val totalCount = galleryModel.prepareExtracting()
             galleryModel.featureProgressCount.observe(this){
                 progressDialog.updateProgress(it, totalCount)
-                Log.d("dialog status ", it.toString())
+                Log.d("dialog status featureProgressCount", it.toString())
+                Log.d("dialog status totalCount", totalCount.toString())
                 if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
                     progressDialog.dismiss()
                 }
@@ -83,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         // 권한이 있는지 확인하고, 없으면 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
             if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
-                galleryModel.fetchImageItemList(this)
+                galleryModel.fetchImageItemUris(this)
             } else {
                 requestPermission(
                     this,
@@ -93,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             }
         } else { // Android 13 미만
             if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                galleryModel.fetchImageItemList(this)
+                galleryModel.fetchImageItemUris(this)
             } else {
                 requestPermission(
                     this,
@@ -145,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // 권한이 허용되었으므로 이미지 아이템을 가져옴
                     Toast.makeText(this, "권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
-                    galleryModel.fetchImageItemList(this)
+                    galleryModel.fetchImageItemUris(this)
                 } else {
                     // 권한이 거부됨
                     Toast.makeText(this, "권한이 거부되었습니다. 앱을 사용하려면 권한이 필요합니다.", Toast.LENGTH_SHORT)

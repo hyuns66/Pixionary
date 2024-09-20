@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.FloatBuffer
+import java.util.ArrayList
 import java.util.Collections
 
 class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
@@ -21,6 +22,8 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
 
     //    private lateinit var visionTransformerByte : ByteArray
     private lateinit var visionTransformerSession: OrtSession
+    private lateinit var inputTensor: OnnxTensor
+    private lateinit var outputResult: OrtSession.Result
 
     fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
         try {
@@ -32,8 +35,10 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outputStream.write(buffer, 0, bytesRead)
             }
-
-            return outputStream.toByteArray()
+            val result = outputStream.toByteArray()
+            outputStream.close()
+            inputStream.close()
+            return result
         } catch (e: IOException) {
             e.printStackTrace()
             Log.d("read_VisionTransformer_ERROR", "check readONNXModelFromRaw method.")
@@ -63,7 +68,6 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
         )   // 비트맵 픽셀값 bmpData에 저장 row 단위로 저장
         bmpData.sliceArray(0 until 20).forEach {
             val red = (it shr 16) and 0xFF
-            Log.d("sizee_data", "$red")
         }
         return bmpData
     }
@@ -92,7 +96,7 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
                     imgData.put(
                         batch + idx,
                         (((pixelValue shr 16 and 0xFF) / 255f - 0.48145467f) / 0.26862955f)
-                    )          // R
+                    )          // Rq
                     imgData.put(
                         batch + idx + stride,
                         (((pixelValue shr 8 and 0xFF) / 255f - 0.4578275f) / 0.2613026f)
@@ -116,19 +120,19 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
     }
 
     override fun runSession(dataList: ArrayList<Bitmap>): Array<FloatArray> {
+        lateinit var result : Array<FloatArray>
         try {
             initializeRuntime()
-            val inputTensor = makeBatchData(dataList)
-            inputTensor.floatBuffer
+            inputTensor = makeBatchData(dataList)
+//            inputTensor.floatBuffer
             val inputName = visionTransformerSession.inputNames.iterator().next()
-            val resultTensor =
+            outputResult =
                 visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
-            val outputs = resultTensor.get(0).value as Array<FloatArray> // [1 84 8400]
-            return outputs
-//        val results = dataProcess.outputsToNPMSPredictions(outputs)
+            result = outputResult.get(0).value as Array<FloatArray> // [1 84 8400]
         } finally {
             destroyRuntime()
         }
+        return result
     }
 
     fun initializeRuntime() {
@@ -145,11 +149,14 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
             Log.e("ModelLoading", "Failed to load the ONNX model.")
             throw IllegalStateException("Failed to load the ONNX model.")
         }
+        sessionOptions.close()
     }
 
     fun destroyRuntime(){
         visionTransformerSession.close() // OrtSession을 닫습니다.
         ortEnvironment.close()
+        outputResult.close()
+        inputTensor.close()
     }
 
     companion object{

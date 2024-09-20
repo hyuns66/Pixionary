@@ -17,6 +17,8 @@ class TextTransformerRunner : InputUtil<String> {
     private lateinit var ortEnvironment : OrtEnvironment
     private val tokenizer = BPETokenizer()
     private lateinit var textTransformerSession : OrtSession
+    private lateinit var inputTensor : Pair<OnnxTensor, OnnxTensor>
+    private lateinit var outputResult : OrtSession.Result
 
     fun readONNXModelFromRaw(resources: Resources, rawResourceId: Int): ByteArray? {
         try {
@@ -28,8 +30,10 @@ class TextTransformerRunner : InputUtil<String> {
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 outputStream.write(buffer, 0, bytesRead)
             }
-
-            return outputStream.toByteArray()
+            val result = outputStream.toByteArray()
+            inputStream.close()
+            outputStream.close()
+            return result
         } catch (e: IOException) {
             e.printStackTrace()
             Log.d("read_textTransformer_ERROR", "check readONNXModelFromRaw method.")
@@ -84,18 +88,17 @@ class TextTransformerRunner : InputUtil<String> {
     }
 
     override fun runSession(dataList: ArrayList<String>): Array<FloatArray> {
+        lateinit var results : Array<FloatArray>
         try {
             initializeRuntime()
             // 모델 입력 데이터 생성 및 전처리 (실제 모델에 따라 필요한 입력 데이터를 준비)
-            val inputTensor = makeBatchData(dataList)
+            inputTensor = makeBatchData(dataList)
 
             // 모델 실행
             val inputs =
                 mapOf("text_embedding" to inputTensor.first , "attention_mask" to inputTensor.second)
-            val results = textTransformerSession.run(inputs)
-
-            // 결과 처리 (출력 데이터를 가져와서 사용)
-            return results.get(0).value as Array<FloatArray>
+            outputResult = textTransformerSession.run(inputs)
+            results = outputResult.get(0).value as Array<FloatArray>
 
             // 출력 데이터를 사용하여 원하는 작업을 수행
 //            processModelOutput(outputData)
@@ -103,6 +106,8 @@ class TextTransformerRunner : InputUtil<String> {
             // 세션 및 환경 정리
             destroyRuntime()
         }
+        // 결과 처리 (출력 데이터를 가져와서 사용)
+        return results
     }
 
     private fun initializeRuntime(){
@@ -121,11 +126,15 @@ class TextTransformerRunner : InputUtil<String> {
             Log.e("ModelLoading", "Failed to load the ONNX model.")
             throw IllegalStateException("Failed to load the ONNX model.")
         }
+        sessionOptions.close()
     }
 
     private fun destroyRuntime(){
         textTransformerSession.close()
         ortEnvironment.close()
+        inputTensor.first.close()
+        inputTensor.second.close()
+        outputResult.close()
     }
 
     companion object{

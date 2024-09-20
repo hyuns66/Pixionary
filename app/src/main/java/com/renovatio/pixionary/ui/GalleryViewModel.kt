@@ -30,12 +30,13 @@ class GalleryViewModel(
     val visionRunner : VisionTransformerRunner,
     val featureStoreRepository: FeatureRepository
 ) : ViewModel() {
-    private val _imageItemUris = MutableLiveData<MutableList<Array<Pair<String, Uri>?>>>(mutableListOf())
-    val imageItemUris : LiveData<MutableList<Array<Pair<String, Uri>?>>> get() = _imageItemUris
+    private val _imageItemUris = MutableLiveData<MutableList<Pair<String, Uri>?>>(mutableListOf())
+    val imageItemUris : LiveData<MutableList<Pair<String, Uri>?>> get() = _imageItemUris
+    private val _inputItems = mutableListOf<MutableList<Pair<String, Uri>>>()
     private val _featureProgressCount = MutableLiveData(0)
+    val featureProgressCount get() = _featureProgressCount
     private val _searchResults = MutableLiveData<List<Feature>>(mutableListOf())
     val searchResults : LiveData<List<Feature>> get() = _searchResults
-    val featureProgressCount get() = _featureProgressCount
 
     /**
     안드로이드 Q(API 레벨 29) 이상에서는 더 엄격한 저장소 권한과 보안 정책이 도입되었습니다.
@@ -43,7 +44,7 @@ class GalleryViewModel(
     이러한 정책 변화에 따라 쿼리 조건을 더 명확하게 설정하는 것이 중요해졌습니다.
     **/
     @SuppressLint("Range")
-    fun fetchImageItemList(context: Context) {
+    fun fetchImageItemUris(context: Context) {
         val collection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Images.Media.getContentUri(
@@ -65,32 +66,50 @@ class GalleryViewModel(
         val selectionArgs = arrayOf(
             "0"
         )
+        var count = 0
         val cursor = context.contentResolver.query(collection, projection, selection, selectionArgs, sortOrder)
-        val paths = mutableListOf<String>()
-        val uris : Array<Pair<String, Uri>?> = arrayOfNulls(VisionTransformerRunner.BATCH_SIZE)
-        var uriCnt = 0
         cursor?.use {
             while(cursor.moveToNext()) {
                 val mediaPath = cursor.getString(cursor.getColumnIndex(INDEX_MEDIA_URI))
-                uris[uriCnt] = Pair(mediaPath, Uri.fromFile(File(mediaPath)))
-                uriCnt += 1
-                if (uriCnt >= VisionTransformerRunner.BATCH_SIZE){
-                    _imageItemUris.value!!.add(uris.clone())
-                    uriCnt = 0
-                    for (i in uris.indices){
-                        uris[i] = null
-                    }
-                }
-                paths.add(mediaPath)
+                _imageItemUris.value!!.add(Pair(mediaPath, Uri.fromFile(File(mediaPath))))
+                count += 1
                 // TODO 부하가 너무 많이걸려서 소수사진으로 제한. 나중에 제한풀어야함
-                if (paths.size == 120){
-                    break
-                }
+                if (count == 123) break
             }
         }
-        _searchResults.value = paths.map {
-            Feature(it, floatArrayOf())
+    }
+
+    // 전체 이미지들중 featureStore에 없는 이미지들만 골라서 input Data 구축
+    fun prepareExtracting() : Int{
+        _featureProgressCount.value = 0
+        var uriCnt = 0
+        var batchCnt = 0
+        val imageFeatures = featureStoreRepository.loadFeatures()
+        val pathSet: Set<String> = imageFeatures.map { it.path }.toSet()
+        val dummyPair = _imageItemUris.value!![0]!!
+        _inputItems.clear()
+        for (pair in _imageItemUris.value!!){
+            if (pair!!.first in pathSet) {
+                Log.d("LILILISDfjlskd", pair.first)
+                continue
+            }       // featureStore에 이미 있는 이미지면 continue
+            if (uriCnt == 0){
+                _inputItems.add(mutableListOf())
+            }
+            _inputItems[batchCnt].add(pair)
+            uriCnt += 1
+            if (uriCnt == VisionTransformerRunner.BATCH_SIZE){
+                uriCnt = 0
+                batchCnt += 1
+            }
         }
+        if (uriCnt != 0){
+            for (i in uriCnt until VisionTransformerRunner.BATCH_SIZE){
+                _inputItems[batchCnt].add(dummyPair)
+            }
+            batchCnt += 1
+        }
+        return batchCnt * 12
     }
 
     fun extractFeatures(context : Context){
@@ -99,9 +118,9 @@ class GalleryViewModel(
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
         viewModelScope.launch(Dispatchers.Default){
-            for (uris in imageItemUris.value!!) {
+            for (uris in _inputItems) {
                 for (uriPair in uris){
-                    val path = uriPair!!.first
+                    val path = uriPair.first
                     val uri = uriPair.second
                     val bitmap =
                         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){

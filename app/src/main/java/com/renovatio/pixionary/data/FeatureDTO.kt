@@ -3,13 +3,13 @@ package com.renovatio.pixionary.data
 import com.renovatio.pixionary.domain.model.Feature
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
+import io.objectbox.annotation.Unique
 
 @Entity
 data class FeatureDTO(
-    val path : String = "",
+    @Unique val path : String = "",
     val feature : FloatArray = FloatArray(0),
-    @Id
-    var id: Long = 0
+    @Id var id: Long = 0
 )
 
 fun FeatureDTO.toModel(): Feature {
