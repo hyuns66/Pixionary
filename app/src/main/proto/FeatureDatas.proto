@@ -1,0 +1,13 @@
+syntax = "proto3"; // syntax 를 설정하여 protocol buffer 3버전을 사용한다는 것을 명시
+
+option java_package = "com.example.pixionary"; // 클래스가 생성될 package 명 명시
+option java_multiple_files = true;
+
+message FeatureState { // 데이터 구조 정의
+  string path = 1;
+  float value = 2;
+}
+
+message FeatureDatas {
+  repeated FeatureState featureState = 1; // repeated => list
+}
