@@ -149,7 +149,6 @@ class GalleryViewModel(
 
     fun searchFeatures(query : String){
         val imageFeatures = featureStoreRepository.loadFeatures()
-        Log.d("LILILISDfjlskd", imageFeatures.size.toString())
         val textRunner = TextTransformerRunner()
         val returns = textRunner.runSession(arrayListOf(query))
 

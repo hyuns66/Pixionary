@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        Log.d("core num", Runtime.getRuntime().availableProcessors().toString())
 
         val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
         val displayWidth = displayMetrics!!.widthPixels
