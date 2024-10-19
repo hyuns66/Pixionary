@@ -45,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d("core num", Runtime.getRuntime().availableProcessors().toString())
 
-        galleryModel.testCoroutine()
         val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
         val displayWidth = displayMetrics!!.widthPixels
         val imagePreviewAdapter = ImagePreviewRVAdapter(

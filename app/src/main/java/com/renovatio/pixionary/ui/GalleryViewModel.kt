@@ -23,9 +23,11 @@ import com.renovatio.pixionary.util.SimilarityCalculator
 import com.renovatio.pixionary.util.TextTransformerRunner
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -82,6 +84,7 @@ class GalleryViewModel(
                 if (count == 123) break
             }
         }
+        _searchResults.value = imageItemUris.value!!.map { Feature(it!!.first, floatArrayOf()) }
     }
 
     // 전체 이미지들중 featureStore에 없는 이미지들만 골라서 input Data 구축
@@ -91,9 +94,9 @@ class GalleryViewModel(
         var batchCnt = 0
         val imageFeatures = featureStoreRepository.loadFeatures()
         val pathSet: Set<String> = imageFeatures.map { it.path }.toSet()
-        val dummyPair = _imageItemUris.value!![0]!!
+        val dummyPair = imageItemUris.value!![0]!!
         _inputItems.clear()
-        for (pair in _imageItemUris.value!!){
+        for (pair in imageItemUris.value!!){
             if (pair!!.first in pathSet) {
                 Log.d("LILILISDfjlskd", pair.first)
                 continue
@@ -108,6 +111,7 @@ class GalleryViewModel(
                 batchCnt += 1
             }
         }
+        // 마지막 batch 부족한 공간 dummy pair 패딩
         if (uriCnt != 0){
             for (i in uriCnt until VisionTransformerRunner.BATCH_SIZE){
                 _inputItems[batchCnt].add(dummyPair)
@@ -118,37 +122,43 @@ class GalleryViewModel(
     }
 
     fun extractFeatures(context : Context){
-        val bitmapList = arrayListOf<Bitmap>()
-        val pathList = arrayListOf<String>()
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
-        viewModelScope.launch(Dispatchers.Default){
+        viewModelScope.launch{
+            val jobs = mutableListOf<Job>()
+            visionRunner.initializeRuntime()
             for (uris in _inputItems) {
-                for (uriPair in uris){
-                    val path = uriPair.first
-                    val uri = uriPair.second
-                    val bitmap =
-                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                            ImageDecoder.decodeBitmap(createSource(context.contentResolver, uri)){ decoder, _, _ ->
-                                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                                decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_LOW_RAM
-                                decoder.setTargetColorSpace(ColorSpace.get(ColorSpace.Named.SRGB))
+                val job = viewModelScope.launch(Dispatchers.Default) {
+                    val bitmapList = arrayListOf<Bitmap>()
+                    val pathList = arrayListOf<String>()
+                    for (uriPair in uris){
+                        val path = uriPair.first
+                        val uri = uriPair.second
+                        val bitmap =
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                                ImageDecoder.decodeBitmap(createSource(context.contentResolver, uri)){ decoder, _, _ ->
+                                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                                    decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_LOW_RAM
+                                    decoder.setTargetColorSpace(ColorSpace.get(ColorSpace.Named.SRGB))
+                                }
+                            } else {
+                                getBitmap(context.contentResolver, uri)
                             }
-                        } else {
-                            getBitmap(context.contentResolver, uri)
-                        }
-                    bitmapList.add(bitmap)
-                    pathList.add(path)
-                }
-                val features = visionRunner.runSession(bitmapList)
+                        bitmapList.add(bitmap)
+                        pathList.add(path)
+                    }
+                    val features = visionRunner.runSession(bitmapList)
 
-                featureStoreRepository.saveFeatures(pathList, features)
-                bitmapList.clear()
-                pathList.clear()
-                _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
-                    VisionTransformerRunner.BATCH_SIZE
-                ))
+                    featureStoreRepository.saveFeatures(pathList, features)
+                    _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
+                        VisionTransformerRunner.BATCH_SIZE
+                    ))
+                }
+                jobs.add(job)
             }
+            // 모든 코루틴이 완료될 때까지 대기
+            jobs.joinAll()
+            visionRunner.destroyRuntime()
         }
     }
 

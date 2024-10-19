@@ -121,17 +121,24 @@ class VisionTransformerRunner : InputUtil<Bitmap>, ImageUtils() {
 
     override fun runSession(dataList: ArrayList<Bitmap>): Array<FloatArray> {
         lateinit var result : Array<FloatArray>
-        try {
-            initializeRuntime()
-            inputTensor = makeBatchData(dataList)
+        inputTensor = makeBatchData(dataList)
 //            inputTensor.floatBuffer
-            val inputName = visionTransformerSession.inputNames.iterator().next()
-            outputResult =
-                visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
-            result = outputResult.get(0).value as Array<FloatArray> // [1 84 8400]
-        } finally {
-            destroyRuntime()
-        }
+        val inputName = visionTransformerSession.inputNames.iterator().next()
+        outputResult =
+            visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
+        result = outputResult.get(0).value as Array<FloatArray> // [1 84 8400]
+
+//        try {
+//            initializeRuntime()
+//            inputTensor = makeBatchData(dataList)
+////            inputTensor.floatBuffer
+//            val inputName = visionTransformerSession.inputNames.iterator().next()
+//            outputResult =
+//                visionTransformerSession.run(Collections.singletonMap(inputName, inputTensor))
+//            result = outputResult.get(0).value as Array<FloatArray> // [1 84 8400]
+//        } finally {
+//            destroyRuntime()
+//        }
         return result
     }
 
