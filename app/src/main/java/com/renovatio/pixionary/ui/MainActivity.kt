@@ -22,6 +22,12 @@ import com.renovatio.pixionary.util.VisionTransformerRunner
 import com.renovatio.pixionary.databinding.ActivityMainBinding
 import com.renovatio.pixionary.domain.model.Feature
 import io.objectbox.kotlin.boxFor
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
@@ -39,6 +45,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d("core num", Runtime.getRuntime().availableProcessors().toString())
 
+        galleryModel.testCoroutine()
         val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
         val displayWidth = displayMetrics!!.widthPixels
         val imagePreviewAdapter = ImagePreviewRVAdapter(

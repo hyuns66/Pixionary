@@ -23,8 +23,13 @@ import com.renovatio.pixionary.util.SimilarityCalculator
 import com.renovatio.pixionary.util.TextTransformerRunner
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.util.concurrent.Executors
 
 class GalleryViewModel(
     val visionRunner : VisionTransformerRunner,
