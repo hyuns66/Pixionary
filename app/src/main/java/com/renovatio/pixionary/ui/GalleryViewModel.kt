@@ -81,7 +81,7 @@ class GalleryViewModel(
                 _imageItemUris.value!!.add(Pair(mediaPath, Uri.fromFile(File(mediaPath))))
                 count += 1
                 // TODO 부하가 너무 많이걸려서 소수사진으로 제한. 나중에 제한풀어야함
-                if (count == 123) break
+                if (count == 2400) break
             }
         }
         _searchResults.value = imageItemUris.value!!.map { Feature(it!!.first, floatArrayOf()) }
@@ -124,41 +124,49 @@ class GalleryViewModel(
     fun extractFeatures(context : Context){
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
-        viewModelScope.launch{
-            val jobs = mutableListOf<Job>()
-            visionRunner.initializeRuntime()
-            for (uris in _inputItems) {
-                val job = viewModelScope.launch(Dispatchers.Default) {
-                    val bitmapList = arrayListOf<Bitmap>()
-                    val pathList = arrayListOf<String>()
-                    for (uriPair in uris){
-                        val path = uriPair.first
-                        val uri = uriPair.second
-                        val bitmap =
-                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                                ImageDecoder.decodeBitmap(createSource(context.contentResolver, uri)){ decoder, _, _ ->
-                                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                                    decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_LOW_RAM
-                                    decoder.setTargetColorSpace(ColorSpace.get(ColorSpace.Named.SRGB))
-                                }
-                            } else {
-                                getBitmap(context.contentResolver, uri)
-                            }
-                        bitmapList.add(bitmap)
-                        pathList.add(path)
-                    }
-                    val features = visionRunner.runSession(bitmapList)
+        // 커스텀 스레드 풀 생성
+        val myThreadPool = Executors.newFixedThreadPool(8)
+        val myDispatcher = myThreadPool.asCoroutineDispatcher()
 
-                    featureStoreRepository.saveFeatures(pathList, features)
-                    _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
-                        VisionTransformerRunner.BATCH_SIZE
-                    ))
+        viewModelScope.launch{
+            visionRunner.initializeRuntime()
+            val jobs = mutableListOf<Job>()
+            try {
+                for (uris in _inputItems) {
+                    val job = viewModelScope.launch(myDispatcher) {
+                        val bitmapList = arrayListOf<Bitmap>()
+                        val pathList = arrayListOf<String>()
+                        for (uriPair in uris){
+                            val path = uriPair.first
+                            val uri = uriPair.second
+                            val bitmap =
+                                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                                    ImageDecoder.decodeBitmap(createSource(context.contentResolver, uri)){ decoder, _, _ ->
+                                        decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                                        decoder.memorySizePolicy = ImageDecoder.MEMORY_POLICY_LOW_RAM
+                                        decoder.setTargetColorSpace(ColorSpace.get(ColorSpace.Named.SRGB))
+                                    }
+                                } else {
+                                    getBitmap(context.contentResolver, uri)
+                                }
+                            bitmapList.add(bitmap)
+                            pathList.add(path)
+                        }
+                        val features = visionRunner.runSession(bitmapList)
+
+                        featureStoreRepository.saveFeatures(pathList, features)
+                        _featureProgressCount.postValue(_featureProgressCount.value!!.plus(
+                            VisionTransformerRunner.BATCH_SIZE
+                        ))
+                    }
+                    jobs.add(job)
                 }
-                jobs.add(job)
+                jobs.joinAll()
+            } finally {
+                visionRunner.destroyRuntime()
+                myDispatcher.close()
+                myThreadPool.shutdown()
             }
-            // 모든 코루틴이 완료될 때까지 대기
-            jobs.joinAll()
-            visionRunner.destroyRuntime()
         }
     }
 
