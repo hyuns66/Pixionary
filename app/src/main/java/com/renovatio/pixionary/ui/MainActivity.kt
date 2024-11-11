@@ -13,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.renovatio.pixionary.ApplicationClass
 import com.renovatio.pixionary.data.FeatureDTO
 import com.renovatio.pixionary.data.FeatureRepository
@@ -21,6 +23,7 @@ import com.renovatio.pixionary.data.ObjectBox.store
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import com.renovatio.pixionary.databinding.ActivityMainBinding
 import com.renovatio.pixionary.domain.model.Feature
+import com.renovatio.pixionary.util.VitBackgroundRunner
 import io.objectbox.kotlin.boxFor
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
@@ -70,13 +73,12 @@ class MainActivity : AppCompatActivity() {
             progressDialog.setOnDismissListener {
                 galleryModel.featureProgressCount.removeObservers(this)
             }
-            /*
-             * TODO: extractFeatures 매서드 수행 전 사전작업 필요
-             * 1. 데이터베이스에 존재하는 이미지와 실제 이미지 일치여부 확인해서 새로 fetch해야 하는 이미지 path만 솎아내기 -> totalCount
-             * 2. featureProgressCount 0으로 세팅
-             * 3. 아래 if문에서 적절히 dismiss 되도록 로직 수정
-            */
             val totalCount = galleryModel.prepareExtracting()
+            // WorkRequest 생성
+            val workRequest = OneTimeWorkRequestBuilder<VitBackgroundRunner>().build()
+            // WorkManager에 작업 enqueue
+            WorkManager.getInstance(this).enqueue(workRequest)
+
             galleryModel.featureProgressCount.observe(this){
                 progressDialog.updateProgress(it, totalCount)
                 Log.d("dialog status featureProgressCount", it.toString())
@@ -131,13 +133,6 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-//    private fun searchImage(query : String, imgFeatures : List<Feature>) : List<Feature>{
-//        val textRunner = TextTransformerRunner()
-//        val returns = textRunner.runSession(arrayListOf(query))
-//
-//        val calc = SimilarityCalculator(returns, imgFeatures)
-//        return calc.run()
-//    }
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }

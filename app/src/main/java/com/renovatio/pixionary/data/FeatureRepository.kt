@@ -8,8 +8,13 @@ import com.renovatio.pixionary.domain.model.Feature
 import io.objectbox.Box
 import io.objectbox.exception.UniqueViolationException
 import io.objectbox.kotlin.boxFor
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class FeatureRepository(private val featureBox : Box<FeatureDTO>) {
+@Singleton
+class FeatureRepository @Inject constructor(
+    private val featureBox : Box<FeatureDTO>
+) {
     fun saveFeatures(key: List<String>, value: Array<FloatArray>) {
         val datas = key.zip(value).map { (k, v) ->
             FeatureDTO(path = k, feature = v)
