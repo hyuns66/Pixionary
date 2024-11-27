@@ -1,7 +1,6 @@
 package com.renovatio.pixionary.domain.usecase
 
 import android.net.Uri
-import android.util.Log
 import com.renovatio.pixionary.data.FeatureRepository
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import javax.inject.Inject

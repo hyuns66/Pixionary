@@ -1,6 +1,8 @@
 package com.renovatio.pixionary.util
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,24 +11,20 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
 import androidx.work.CoroutineWorker
-import androidx.work.ListenableWorker
-import androidx.work.WorkerFactory
+import androidx.work.ForegroundInfo
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.renovatio.pixionary.R
 import com.renovatio.pixionary.data.FeatureRepository
-import com.renovatio.pixionary.domain.model.Feature
+import com.renovatio.pixionary.domain.model.GalleryFetchOptions
 import com.renovatio.pixionary.domain.usecase.PrepareUnSynchronizedImagesUseCase
-import com.renovatio.pixionary.ui.GalleryViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
@@ -34,6 +32,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 @HiltWorker
 class VitBackgroundRunner @AssistedInject constructor(
@@ -43,27 +42,30 @@ class VitBackgroundRunner @AssistedInject constructor(
     private val featureStoreRepository: FeatureRepository,
     private val prepareUnSynchronizedImages: PrepareUnSynchronizedImagesUseCase
 ) : CoroutineWorker(context, params) {
-    // The unique ID for a row.
-    private val INDEX_MEDIA_ID = MediaStore.MediaColumns._ID
-    // Absolute filesystem path to the media item on disk.
-    private val INDEX_MEDIA_URI = MediaStore.MediaColumns.DATA
-    // album directory name
-    private val INDEX_ALBUM_NAME = MediaStore.Images.Media.BUCKET_DISPLAY_NAME
-    // The time the media item was first added.
-    private val INDEX_DATE_ADDED = MediaStore.MediaColumns.DATE_ADDED
     private val imageItemUris = mutableListOf<Pair<String, Uri>?>()
     private val inputItems = mutableListOf<MutableList<Pair<String, Uri>>>()
     private var featureProgressCount = 0
     override suspend fun doWork(): Result = coroutineScope{
+        setForeground(createForegroundInfo(0))
+
         fetchImageItemUris(applicationContext)
-        prepareExtracting()
+        // 작업에 필요한 데이터셋 생성 밑 progress 정보 전달
+        val maxInputImagesCount = prepareExtracting()
+        val maxProgressCount = workDataOf(PROGRESS_MAX_KEY to maxInputImagesCount)
+        setProgress(maxProgressCount)
+
+        val availableCores = Runtime.getRuntime().availableProcessors()
+        val myThreadPool = Executors.newFixedThreadPool(availableCores)
+        val myDispatcher = myThreadPool.asCoroutineDispatcher()
         val bmpFactoryOption = BitmapFactory.Options()
         bmpFactoryOption.inScaled = false
         visionRunner.initializeRuntime()
         val jobs = mutableListOf<Job>()
+        val currentProgress = AtomicInteger(0)
+        setProgress(workDataOf(PROGRESS_INFO_KEY to currentProgress.get()))
         try {
             for (uris in inputItems) {
-                val job = CoroutineScope(Dispatchers.Default).launch{
+                val job = CoroutineScope(myDispatcher).launch{
                     val bitmapList = arrayListOf<Bitmap>()
                     val pathList = arrayListOf<String>()
                     for (uriPair in uris){
@@ -91,7 +93,8 @@ class VitBackgroundRunner @AssistedInject constructor(
 
                     featureStoreRepository.saveFeatures(pathList, features)
                     featureProgressCount += VisionTransformerRunner.BATCH_SIZE
-                    setProgress(workDataOf("Progress" to featureProgressCount))
+                    val progress = currentProgress.addAndGet(VisionTransformerRunner.BATCH_SIZE)
+                    setProgress(workDataOf(PROGRESS_INFO_KEY to progress))
                 }
                 jobs.add(job)
             }
@@ -101,6 +104,8 @@ class VitBackgroundRunner @AssistedInject constructor(
             Result.failure()
         } finally {
             visionRunner.destroyRuntime()
+            myDispatcher.close()
+            myThreadPool.shutdown()
         }
     }
 
@@ -120,15 +125,15 @@ class VitBackgroundRunner @AssistedInject constructor(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             }
         val projection = arrayOf(
-            INDEX_MEDIA_ID,
-            INDEX_MEDIA_URI,
-            INDEX_ALBUM_NAME,
-            INDEX_DATE_ADDED
+            GalleryFetchOptions.INDEX_MEDIA_ID.key,
+            GalleryFetchOptions.INDEX_MEDIA_URI.key,
+            GalleryFetchOptions.INDEX_ALBUM_NAME.key,
+            GalleryFetchOptions.INDEX_DATE_ADDED.key
         )
         val selection =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Images.Media.SIZE + " > ?"
             else null
-        val sortOrder = "$INDEX_DATE_ADDED DESC"
+        val sortOrder = "${GalleryFetchOptions.INDEX_DATE_ADDED.key} DESC"
         val selectionArgs = arrayOf(
             "0"
         )
@@ -136,7 +141,7 @@ class VitBackgroundRunner @AssistedInject constructor(
         val cursor = context.contentResolver.query(collection, projection, selection, selectionArgs, sortOrder)
         cursor?.use {
             while(cursor.moveToNext()) {
-                val mediaPath = cursor.getString(cursor.getColumnIndex(INDEX_MEDIA_URI))
+                val mediaPath = cursor.getString(cursor.getColumnIndex(GalleryFetchOptions.INDEX_MEDIA_URI.key))
                 imageItemUris.add(Pair(mediaPath, Uri.fromFile(File(mediaPath))))
                 count += 1
                 // TODO 부하가 너무 많이걸려서 소수사진으로 제한. 나중에 제한풀어야함
@@ -177,4 +182,49 @@ class VitBackgroundRunner @AssistedInject constructor(
         }
         return batchCnt * 12
     }
+
+    private fun createForegroundInfo(progress: Int): ForegroundInfo {
+        val channelId = "your_channel_id"
+        val title = "작업 진행 중"
+        val cancel = "취소"
+
+        // Notification 채널 생성 (API 26 이상)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "작업 알림",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+
+        // 작업 취소 인텐트 생성
+        val intent = WorkManager.getInstance(applicationContext)
+            .createCancelPendingIntent(id)
+
+        // Notification 생성
+        val notification = NotificationCompat.Builder(applicationContext, channelId)
+            .setContentTitle(title)
+            .setTicker(title)
+            .setContentText("진행률: $progress%")
+            .setSmallIcon(R.drawable.img_7)
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_delete, cancel, intent)
+            .setProgress(100, progress, false)
+            .build()
+        return ForegroundInfo(1, notification)
+    }
+
+    private fun updateNotification(progress: Int) {
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = createForegroundInfo(progress).notification
+        notificationManager.notify(1, notification)
+    }
+
+    companion object{
+        const val PROGRESS_INFO_KEY = "progress"
+        const val PROGRESS_MAX_KEY = "max-progress"
+    }
+
 }

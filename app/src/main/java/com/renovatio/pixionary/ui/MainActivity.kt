@@ -1,60 +1,61 @@
 package com.renovatio.pixionary.ui
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.renovatio.pixionary.ApplicationClass
-import com.renovatio.pixionary.data.FeatureDTO
-import com.renovatio.pixionary.data.FeatureRepository
-import com.renovatio.pixionary.data.ObjectBox
-import com.renovatio.pixionary.data.ObjectBox.store
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import com.renovatio.pixionary.databinding.ActivityMainBinding
-import com.renovatio.pixionary.domain.model.Feature
-import com.renovatio.pixionary.util.VitBackgroundRunner
-import io.objectbox.kotlin.boxFor
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import java.util.concurrent.Executors
+import com.renovatio.pixionary.databinding.DialogUnsynchronizedAlertBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding : ActivityMainBinding
-    private val galleryModel by viewModels<GalleryViewModel>{
-        val visionTransformerRunner = VisionTransformerRunner()
-        val featureRepository = FeatureRepository(store.boxFor(FeatureDTO::class))
-        GalleryViewModel.provideFactory(visionTransformerRunner, featureRepository)
+    private val galleryModel : GalleryViewModel by viewModels()
+    private val imagePreviewAdapter : ImagePreviewRVAdapter by lazy {
+        val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
+        val displayWidth = displayMetrics!!.widthPixels
+        ImagePreviewRVAdapter(
+            displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        Log.d("core num", Runtime.getRuntime().availableProcessors().toString())
 
-        val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
-        val displayWidth = displayMetrics!!.widthPixels
-        val imagePreviewAdapter = ImagePreviewRVAdapter(
-            displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
-        )
-        galleryModel.searchResults.observe(this){
-            imagePreviewAdapter.initImagePaths(it.map{ item -> item.path})
+        initObservers()
+        galleryModel.fetchImageItemUris(this)
+        val unSynchronizedCount = galleryModel.detectUnSynchronizedImages()
+        if (unSynchronizedCount > 0){
+            // AlertDialog 생성
+            val dialogBinding = DialogUnsynchronizedAlertBinding.inflate(layoutInflater)
+            val dialog = AlertDialog.Builder(this)
+                .setView(dialogBinding.root) // 커스텀 뷰 설정
+                .create()
+            dialogBinding.dismissTv.setOnClickListener { dialog.dismiss() }
+            dialogBinding.confirmTv.setOnClickListener {
+                galleryModel.startVitRunner()
+                dialog.dismiss()
+                showProgressDialog(unSynchronizedCount)
+            }
         }
         binding.searchEt.setOnEditorActionListener { v, actionId, event ->
             var handled = false
@@ -64,31 +65,31 @@ class MainActivity : AppCompatActivity() {
             }
             handled
         }
-        binding.mainSearchIv.setOnClickListener {
-            Log.d("dialog status ", "start dialog")
-            val progressDialog = DialogFeatureExtractProgress(this)
-            progressDialog.isCancelable = false
-            progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
-            // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
-            progressDialog.setOnDismissListener {
-                galleryModel.featureProgressCount.removeObservers(this)
-            }
-            val totalCount = galleryModel.prepareExtracting()
-            // WorkRequest 생성
-            val workRequest = OneTimeWorkRequestBuilder<VitBackgroundRunner>().build()
-            // WorkManager에 작업 enqueue
-            WorkManager.getInstance(this).enqueue(workRequest)
-
-            galleryModel.featureProgressCount.observe(this){
-                progressDialog.updateProgress(it, totalCount)
-                Log.d("dialog status featureProgressCount", it.toString())
-                Log.d("dialog status totalCount", totalCount.toString())
-                if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
-                    progressDialog.dismiss()
-                }
-            }
-            galleryModel.extractFeatures(this)
-        }
+//        binding.mainSearchIv.setOnClickListener {
+//            Log.d("dialog status ", "start dialog")
+//            val progressDialog = DialogFeatureExtractProgress(this)
+//            progressDialog.isCancelable = false
+//            progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
+//            // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
+//            progressDialog.setOnDismissListener {
+//                galleryModel.featureProgressCount.removeObservers(this)
+//            }
+//            val totalCount = galleryModel.prepareExtracting()
+//            // WorkRequest 생성
+//            val workRequest = OneTimeWorkRequestBuilder<VitBackgroundRunner>().build()
+//            // WorkManager에 작업 enqueue
+//            WorkManager.getInstance(this).enqueue(workRequest)
+//
+//            galleryModel.featureProgressCount.observe(this){
+//                progressDialog.updateProgress(it, totalCount)
+//                Log.d("dialog status featureProgressCount", it.toString())
+//                Log.d("dialog status totalCount", totalCount.toString())
+//                if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+//                    progressDialog.dismiss()
+//                }
+//            }
+//            galleryModel.extractFeatures(this)
+//        }
 
         // 권한이 있는지 확인하고, 없으면 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
@@ -127,6 +128,39 @@ class MainActivity : AppCompatActivity() {
             setHasFixedSize(true)   // 리사이클러뷰 크기 고정 (아이템 수에 변화가 없기 때문에 사용)
             itemAnimator = null   // 애니메이션 제거
         }
+    }
+
+    private fun initObservers(){
+        galleryModel.searchResults.observe(this){
+            imagePreviewAdapter.initImagePaths(it.map{ item -> item.path})
+        }
+    }
+
+    private fun showProgressDialog(totalCount : Int){
+        val progressDialog = DialogFeatureExtractProgress(this)
+        progressDialog.isCancelable = false
+        progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
+        // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
+        progressDialog.setOnDismissListener {
+            galleryModel.featureProgressCount.removeObservers(this)
+        }
+        galleryModel.startVitRunner()
+        lifecycleScope.launch(Dispatchers.Main) {
+            galleryModel.vitProgress.collect { state ->
+                progressDialog.updateProgress(state, totalCount)
+                if (totalCount - state < VisionTransformerRunner.BATCH_SIZE){
+                    progressDialog.dismiss()
+                }
+            }
+        }
+
+//        galleryModel.vitProgress.observe(this){
+//            progressDialog.updateProgress(it, totalCount)
+//            if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+//                progressDialog.dismiss()
+//            }
+//        }
+//        galleryModel.extractFeatures(this)
     }
 
     override fun onDestroy() {
