@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
         // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
         progressDialog.setOnDismissListener {
             galleryModel.featureProgressCount.removeObservers(this)
-        }r
+        }
         galleryModel.startVitRunner()
         lifecycleScope.launch(Dispatchers.Main) {
             galleryModel.vitProgress.collect { state ->

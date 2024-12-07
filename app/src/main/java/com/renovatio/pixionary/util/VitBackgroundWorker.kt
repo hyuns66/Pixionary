@@ -60,7 +60,7 @@ class VitBackgroundWorker @AssistedInject constructor(
             setProgress(maxProgressCount)
 
             val availableCores = Runtime.getRuntime().availableProcessors()
-            val myThreadPool = Executors.newFixedThreadPool(availableCores / 4)
+            val myThreadPool = Executors.newFixedThreadPool((availableCores / 4).coerceAtLeast(1))
             val myDispatcher = myThreadPool.asCoroutineDispatcher()
             val bmpFactoryOption = BitmapFactory.Options()
             bmpFactoryOption.inScaled = false
