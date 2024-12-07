@@ -1,4 +1,9 @@
 <resources>
+    <!--    core    -->
     <string name="app_name">Pixionary</string>
     <string name="progress_count">%1$d / %2$d</string>
+    <!--    alert    -->
+    <string name="unsynchronized_alert_title">동기화 되지 않은 이미지가 있습니다.\n 동기화 하시겠습니까?</string>
+    <string name="confirm">확인</string>
+    <string name="dismiss">취소</string>
 </resources>

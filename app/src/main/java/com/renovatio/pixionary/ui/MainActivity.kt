@@ -1,36 +1,39 @@
 package com.renovatio.pixionary.ui
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.renovatio.pixionary.ApplicationClass
-import com.renovatio.pixionary.data.FeatureDTO
-import com.renovatio.pixionary.data.FeatureRepository
-import com.renovatio.pixionary.data.ObjectBox
-import com.renovatio.pixionary.data.ObjectBox.store
 import com.renovatio.pixionary.util.VisionTransformerRunner
 import com.renovatio.pixionary.databinding.ActivityMainBinding
-import com.renovatio.pixionary.domain.model.Feature
-import io.objectbox.kotlin.boxFor
+import com.renovatio.pixionary.databinding.DialogUnsynchronizedAlertBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding : ActivityMainBinding
-    private val galleryModel by viewModels<GalleryViewModel>{
-        val visionTransformerRunner = VisionTransformerRunner()
-        val featureRepository = FeatureRepository(store.boxFor(FeatureDTO::class))
-        GalleryViewModel.provideFactory(visionTransformerRunner, featureRepository)
+    private val galleryModel : GalleryViewModel by viewModels()
+    private val imagePreviewAdapter : ImagePreviewRVAdapter by lazy {
+        val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
+        val displayWidth = displayMetrics!!.widthPixels
+        ImagePreviewRVAdapter(
+            displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,13 +41,21 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
-        val displayWidth = displayMetrics!!.widthPixels
-        val imagePreviewAdapter = ImagePreviewRVAdapter(
-            displayWidth / ImagePreviewRVAdapter.SPAN_COUNT
-        )
-        galleryModel.searchResults.observe(this){
-            imagePreviewAdapter.initImagePaths(it.map{ item -> item.path})
+        initObservers()
+        fetchImageItemUris()
+        val unSynchronizedCount = galleryModel.detectUnSynchronizedImages()
+        if (unSynchronizedCount > 0){
+            // AlertDialog 생성
+            val dialogBinding = DialogUnsynchronizedAlertBinding.inflate(layoutInflater)
+            val dialog = AlertDialog.Builder(this)
+                .setView(dialogBinding.root) // 커스텀 뷰 설정
+                .create()
+            dialogBinding.dismissTv.setOnClickListener { dialog.dismiss() }
+            dialogBinding.confirmTv.setOnClickListener {
+                dialog.dismiss()
+                showProgressDialog(unSynchronizedCount)
+            }
+            dialog.show()
         }
         binding.searchEt.setOnEditorActionListener { v, actionId, event ->
             var handled = false
@@ -54,33 +65,86 @@ class MainActivity : AppCompatActivity() {
             }
             handled
         }
-        binding.mainSearchIv.setOnClickListener {
-            Log.d("dialog status ", "start dialog")
-            val progressDialog = DialogFeatureExtractProgress(this)
-            progressDialog.isCancelable = false
-            progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
-            // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
-            progressDialog.setOnDismissListener {
-                galleryModel.featureProgressCount.removeObservers(this)
-            }
-            /*
-             * TODO: extractFeatures 매서드 수행 전 사전작업 필요
-             * 1. 데이터베이스에 존재하는 이미지와 실제 이미지 일치여부 확인해서 새로 fetch해야 하는 이미지 path만 솎아내기 -> totalCount
-             * 2. featureProgressCount 0으로 세팅
-             * 3. 아래 if문에서 적절히 dismiss 되도록 로직 수정
-            */
-            val totalCount = galleryModel.prepareExtracting()
-            galleryModel.featureProgressCount.observe(this){
-                progressDialog.updateProgress(it, totalCount)
-                Log.d("dialog status featureProgressCount", it.toString())
-                Log.d("dialog status totalCount", totalCount.toString())
-                if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+//        binding.mainSearchIv.setOnClickListener {
+//            Log.d("dialog status ", "start dialog")
+//            val progressDialog = DialogFeatureExtractProgress(this)
+//            progressDialog.isCancelable = false
+//            progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
+//            // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
+//            progressDialog.setOnDismissListener {
+//                galleryModel.featureProgressCount.removeObservers(this)
+//            }
+//            val totalCount = galleryModel.prepareExtracting()
+//            // WorkRequest 생성
+//            val workRequest = OneTimeWorkRequestBuilder<VitBackgroundRunner>().build()
+//            // WorkManager에 작업 enqueue
+//            WorkManager.getInstance(this).enqueue(workRequest)
+//
+//            galleryModel.featureProgressCount.observe(this){
+//                progressDialog.updateProgress(it, totalCount)
+//                Log.d("dialog status featureProgressCount", it.toString())
+//                Log.d("dialog status totalCount", totalCount.toString())
+//                if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+//                    progressDialog.dismiss()
+//                }
+//            }
+//            galleryModel.extractFeatures(this)
+//        }
+
+        binding.imagePreviewRv.apply {
+//            val preloadingCount = ImagePreviewRVAdapter.SPAN_COUNT * 20 // 사용자가 스크롤하는 동안 미리 로딩할 이미지의 수
+            adapter = imagePreviewAdapter
+            layoutManager = GridLayoutManager(
+                this@MainActivity,
+                ImagePreviewRVAdapter.SPAN_COUNT
+            )
+//            ).apply {
+//                initialPrefetchItemCount = preloadingCount
+//            }
+            setItemViewCacheSize(ImagePreviewRVAdapter.SPAN_COUNT * 20)
+            setHasFixedSize(true)   // 리사이클러뷰 크기 고정 (아이템 수에 변화가 없기 때문에 사용)
+            itemAnimator = null   // 애니메이션 제거
+        }
+    }
+
+    private fun initObservers(){
+        galleryModel.searchResults.observe(this){
+            imagePreviewAdapter.initImagePaths(it.map{ item -> item.path})
+        }
+    }
+
+    private fun showProgressDialog(totalCount : Int){
+        val progressDialog = DialogFeatureExtractProgress()
+        progressDialog.isCancelable = false
+        progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
+        // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
+        progressDialog.setOnDismissListener {
+            galleryModel.featureProgressCount.removeObservers(this)
+        }
+        galleryModel.startVitRunner()
+        lifecycleScope.launch(Dispatchers.Main) {
+            galleryModel.vitProgress.collect { state ->
+                progressDialog.updateProgress(state, totalCount)
+                if (totalCount - state < VisionTransformerRunner.BATCH_SIZE){
                     progressDialog.dismiss()
                 }
             }
-            galleryModel.extractFeatures(this)
         }
 
+//        galleryModel.vitProgress.observe(this){
+//            progressDialog.updateProgress(it, totalCount)
+//            if (totalCount - it < VisionTransformerRunner.BATCH_SIZE){
+//                progressDialog.dismiss()
+//            }
+//        }
+//        galleryModel.extractFeatures(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    private fun fetchImageItemUris(){
         // 권한이 있는지 확인하고, 없으면 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
             if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
@@ -104,33 +168,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.imagePreviewRv.apply {
-//            val preloadingCount = ImagePreviewRVAdapter.SPAN_COUNT * 20 // 사용자가 스크롤하는 동안 미리 로딩할 이미지의 수
-            adapter = imagePreviewAdapter
-            layoutManager = GridLayoutManager(
-                this@MainActivity,
-                ImagePreviewRVAdapter.SPAN_COUNT
-            )
-//            ).apply {
-//                initialPrefetchItemCount = preloadingCount
-//            }
-            setItemViewCacheSize(ImagePreviewRVAdapter.SPAN_COUNT * 20)
-            setHasFixedSize(true)   // 리사이클러뷰 크기 고정 (아이템 수에 변화가 없기 때문에 사용)
-            itemAnimator = null   // 애니메이션 제거
-        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
-//    private fun searchImage(query : String, imgFeatures : List<Feature>) : List<Feature>{
-//        val textRunner = TextTransformerRunner()
-//        val returns = textRunner.runSession(arrayListOf(query))
-//
-//        val calc = SimilarityCalculator(returns, imgFeatures)
-//        return calc.run()
-//    }
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }

@@ -4,7 +4,7 @@ plugins {
     id("kotlin-android") // Only for Kotlin projects
     id("kotlin-kapt") // Only for Kotlin projects
     id("io.objectbox") // Apply last
-
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -63,4 +63,16 @@ dependencies {
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.google.code.gson:gson:2.11.0")
+    // Workmanager
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    kapt("androidx.hilt:hilt-compiler:1.2.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes = true
 }

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="15dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/unsynchronized_alert_title_tv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/unsynchronized_alert_title"
+        android:textSize="16dp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <Button
+        android:id="@+id/confirm_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/confirm"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:background="@color/transparent"
+        android:textColor="@color/black"
+        android:padding="4dp"
+        android:layout_marginTop="35dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/unsynchronized_alert_title_tv"/>
+
+    <Button
+        android:id="@+id/dismiss_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dismiss"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:background="@color/transparent"
+        android:textColor="@color/red"
+        android:padding="4dp"
+        android:layout_marginTop="35dp"
+        app:layout_constraintEnd_toStartOf="@id/confirm_tv"
+        app:layout_constraintTop_toBottomOf="@id/unsynchronized_alert_title_tv"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,12 +4,24 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil.ImageLoader
 import com.renovatio.pixionary.data.ObjectBox
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
-class ApplicationClass : Application() {
+@HiltAndroidApp
+class ApplicationClass : Application(), Configuration.Provider {
     private lateinit var appContext: Context
 
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
+            .build()
     companion object {
         private lateinit var instance: ApplicationClass
         private const val FEATURE_STORE_DATABASE_NAME = "feature_store"
@@ -49,4 +61,5 @@ class ApplicationClass : Application() {
             .build()
         ObjectBox.init(getContext())
     }
+
 }
