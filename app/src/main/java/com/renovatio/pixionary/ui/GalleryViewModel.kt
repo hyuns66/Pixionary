@@ -3,6 +3,7 @@ package com.renovatio.pixionary.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,7 +14,7 @@ import com.renovatio.pixionary.domain.model.Feature
 import com.renovatio.pixionary.domain.usecase.LoadAllImageUrisUseCase
 import com.renovatio.pixionary.domain.usecase.PrepareUnSynchronizedImagesUseCase
 import com.renovatio.pixionary.domain.usecase.VitWorkManagerUseCase
-import com.renovatio.pixionary.util.VitBackgroundRunner
+import com.renovatio.pixionary.util.VitBackgroundWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -61,8 +62,11 @@ class GalleryViewModel @Inject constructor (
     fun startVitRunner(){
         val workInfo = vitRunner()
         vitProgress = workInfo.map {
+            if (it != null) {
+                Log.d("workRequestststst", "Current state: ${it.state}")
+            }
             if (it.state == WorkInfo.State.RUNNING) {
-                it.progress.getInt(VitBackgroundRunner.PROGRESS_INFO_KEY, 0) // progress 값 반환
+                it.progress.getInt(VitBackgroundWorker.PROGRESS_INFO_KEY, 0) // progress 값 반환
             } else {
                 0 // 작업이 완료되었거나 실패했을 때 0으로 설정
             }

@@ -20,6 +20,7 @@ class ApplicationClass : Application(), Configuration.Provider {
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
+            .setMinimumLoggingLevel(android.util.Log.DEBUG)
             .build()
     companion object {
         private lateinit var instance: ApplicationClass

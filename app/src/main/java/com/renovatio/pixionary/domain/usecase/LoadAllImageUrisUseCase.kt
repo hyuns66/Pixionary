@@ -36,13 +36,14 @@ class LoadAllImageUrisUseCase() {
         )
         var count = 0
         val cursor = context.contentResolver.query(collection, projection, selection, selectionArgs, sortOrder)
+        Log.d("cucurrucusuir", cursor!!.count.toString())
         cursor?.use {
             while(cursor.moveToNext()) {
                 val mediaPath = cursor.getString(cursor.getColumnIndex(GalleryFetchOptions.INDEX_MEDIA_URI.key))
                 imageItemUris.add(Pair(mediaPath, Uri.fromFile(File(mediaPath))))
                 count += 1
                 // TODO 부하가 너무 많이걸려서 소수사진으로 제한. 나중에 제한풀어야함
-                if (count == 2400) break
+                if (count == 240) break
             }
         }
         return imageItemUris

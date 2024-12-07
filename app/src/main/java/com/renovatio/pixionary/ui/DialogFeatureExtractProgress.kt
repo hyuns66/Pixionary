@@ -9,10 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.fragment.app.DialogFragment
+import com.renovatio.pixionary.ApplicationClass
 import com.renovatio.pixionary.R
 import com.renovatio.pixionary.databinding.DialogFeatureExtractProgressBinding
 
-class DialogFeatureExtractProgress(private val context : Context) : DialogFragment() {
+class DialogFeatureExtractProgress() : DialogFragment() {
     private var _binding: DialogFeatureExtractProgressBinding? = null
     private val binding get() = _binding!!
     private var onDismissListener: (() -> Unit)? = null
@@ -24,7 +25,7 @@ class DialogFeatureExtractProgress(private val context : Context) : DialogFragme
             val builder = AlertDialog.Builder(it)
             _binding = DialogFeatureExtractProgressBinding.inflate(layoutInflater)
             binding.progressBar.progress = 0
-            binding.progressCountTv.text = context.getString(R.string.progress_count, 0, 0)
+            binding.progressCountTv.text = ApplicationClass.getContext().getString(R.string.progress_count, 0, 0)
 
             builder.setView(binding.root)
                 .setCancelable(false)
@@ -34,7 +35,7 @@ class DialogFeatureExtractProgress(private val context : Context) : DialogFragme
 
     // 사이즈를 조절하고 싶을 때 사용 (use it when you want to resize dialog)
     private fun resize(dialog: Dialog, width: Float, height: Float){
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val windowManager = ApplicationClass.getContext().getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
         if (Build.VERSION.SDK_INT < 30) {
             val size = Point()
@@ -68,7 +69,7 @@ class DialogFeatureExtractProgress(private val context : Context) : DialogFragme
             return
         }
         binding.progressBar.progress = progressCount * binding.progressBar.max / maxCount
-        binding.progressCountTv.text = context.getString(R.string.progress_count, progressCount, maxCount)
+        binding.progressCountTv.text = ApplicationClass.getContext().getString(R.string.progress_count, progressCount, maxCount)
     }
 
     fun setOnDismissListener(listener: () -> Unit) {

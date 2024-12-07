@@ -15,26 +15,27 @@ import javax.inject.Singleton
 
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 object UseCaseModule {
     @Provides
+    @Singleton
     fun providesLoadAllImageUrisUseCase() : LoadAllImageUrisUseCase {
         return LoadAllImageUrisUseCase()
     }
 
-    @Provides
-    fun providesPrepareUnSynchronizedImageUseCase(featureRepository : FeatureRepository) : PrepareUnSynchronizedImagesUseCase {
-        return PrepareUnSynchronizedImagesUseCase(featureRepository)
-    }
+//    @Provides
+//    fun providesPrepareUnSynchronizedImageUseCase(featureRepository : FeatureRepository) : PrepareUnSynchronizedImagesUseCase {
+//        return PrepareUnSynchronizedImagesUseCase(featureRepository)
+//    }
 
-    @Provides
-    fun providesSearchUseCase(featureRepository : FeatureRepository) : SearchUseCase {
-        return SearchUseCase(featureRepository)
-    }
-
-    @Provides
-    fun provideVitWorkManagerUseCase(workManager: WorkManager): VitWorkManagerUseCase {
-        return VitWorkManagerUseCase(workManager)
-    }
+//    @Provides
+//    fun providesSearchUseCase(featureRepository : FeatureRepository) : SearchUseCase {
+//        return SearchUseCase(featureRepository)
+//    }
+//
+//    @Provides
+//    fun provideVitWorkManagerUseCase(workManager: WorkManager): VitWorkManagerUseCase {
+//        return VitWorkManagerUseCase(workManager)
+//    }
 
 }

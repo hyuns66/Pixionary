@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initObservers()
-        galleryModel.fetchImageItemUris(this)
+        fetchImageItemUris()
         val unSynchronizedCount = galleryModel.detectUnSynchronizedImages()
         if (unSynchronizedCount > 0){
             // AlertDialog 생성
@@ -52,10 +52,10 @@ class MainActivity : AppCompatActivity() {
                 .create()
             dialogBinding.dismissTv.setOnClickListener { dialog.dismiss() }
             dialogBinding.confirmTv.setOnClickListener {
-                galleryModel.startVitRunner()
                 dialog.dismiss()
                 showProgressDialog(unSynchronizedCount)
             }
+            dialog.show()
         }
         binding.searchEt.setOnEditorActionListener { v, actionId, event ->
             var handled = false
@@ -91,29 +91,6 @@ class MainActivity : AppCompatActivity() {
 //            galleryModel.extractFeatures(this)
 //        }
 
-        // 권한이 있는지 확인하고, 없으면 요청
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
-            if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
-                galleryModel.fetchImageItemUris(this)
-            } else {
-                requestPermission(
-                    this,
-                    android.Manifest.permission.READ_MEDIA_IMAGES,
-                    REQUEST_CODE_READ_MEDIA_IMAGES
-                )
-            }
-        } else { // Android 13 미만
-            if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                galleryModel.fetchImageItemUris(this)
-            } else {
-                requestPermission(
-                    this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                    REQUEST_CODE_READ_EXTERNAL_STORAGE
-                )
-            }
-        }
-
         binding.imagePreviewRv.apply {
 //            val preloadingCount = ImagePreviewRVAdapter.SPAN_COUNT * 20 // 사용자가 스크롤하는 동안 미리 로딩할 이미지의 수
             adapter = imagePreviewAdapter
@@ -137,13 +114,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showProgressDialog(totalCount : Int){
-        val progressDialog = DialogFeatureExtractProgress(this)
+        val progressDialog = DialogFeatureExtractProgress()
         progressDialog.isCancelable = false
         progressDialog.show(supportFragmentManager, "Feature-Extracting-Progress")
         // 다이얼로그가 Dismiss 될 때 처리할 작업 설정
         progressDialog.setOnDismissListener {
             galleryModel.featureProgressCount.removeObservers(this)
-        }
+        }r
         galleryModel.startVitRunner()
         lifecycleScope.launch(Dispatchers.Main) {
             galleryModel.vitProgress.collect { state ->
@@ -165,6 +142,32 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+    }
+
+    private fun fetchImageItemUris(){
+        // 권한이 있는지 확인하고, 없으면 요청
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
+            if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
+                galleryModel.fetchImageItemUris(this)
+            } else {
+                requestPermission(
+                    this,
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    REQUEST_CODE_READ_MEDIA_IMAGES
+                )
+            }
+        } else { // Android 13 미만
+            if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                galleryModel.fetchImageItemUris(this)
+            } else {
+                requestPermission(
+                    this,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                    REQUEST_CODE_READ_EXTERNAL_STORAGE
+                )
+            }
+        }
+
     }
 
     private fun hasPermission(context: Context, permission: String): Boolean {

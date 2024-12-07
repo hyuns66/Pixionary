@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.WorkManager
 import com.renovatio.pixionary.data.FeatureDTO
 import com.renovatio.pixionary.data.ObjectBox.store
+import com.renovatio.pixionary.util.VisionTransformerRunner
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,5 +28,11 @@ object SingletonModule {
         @ApplicationContext context: Context,
     ): WorkManager {
         return WorkManager.getInstance(context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideVitRunner() : VisionTransformerRunner{
+        return VisionTransformerRunner()
     }
 }
