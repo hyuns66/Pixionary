@@ -43,10 +43,13 @@ android {
 }
 
 dependencies {
+    val fragment_version = "1.8.3"
 
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
+    // Fragment
+    implementation("androidx.fragment:fragment-ktx:$fragment_version")
     // onnx runtime
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.1")
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.9.0")
@@ -70,6 +73,9 @@ dependencies {
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     kapt("androidx.hilt:hilt-compiler:1.2.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
+    // Lottie Animation
+    implementation("com.airbnb.android:lottie:6.6.1")
+
 }
 
 // Allow references to generated code

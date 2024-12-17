@@ -10,4 +10,5 @@
     <color name="white">#FFFFFF</color>
     <color name="red">#FF0000</color>
     <color name="transparent">#00FFFFFF</color>
+    <color name="general_search_home_bg">#D6FFA1</color>
 </resources>

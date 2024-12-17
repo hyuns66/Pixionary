@@ -1,4 +1,4 @@
-package com.renovatio.pixionary.ui
+package com.renovatio.pixionary.ui.view
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -15,18 +15,20 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.renovatio.pixionary.ApplicationClass
+import com.renovatio.pixionary.databinding.ActivityGeneralSearchBinding
 import com.renovatio.pixionary.util.VisionTransformerRunner
-import com.renovatio.pixionary.databinding.ActivityMainBinding
 import com.renovatio.pixionary.databinding.DialogUnsynchronizedAlertBinding
+import com.renovatio.pixionary.ui.adapter.ImagePreviewRVAdapter
+import com.renovatio.pixionary.ui.viewmodel.GalleryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class GeneralSearchActivity : AppCompatActivity() {
 
-    lateinit var binding : ActivityMainBinding
+    lateinit var binding : ActivityGeneralSearchBinding
     private val galleryModel : GalleryViewModel by viewModels()
     private val imagePreviewAdapter : ImagePreviewRVAdapter by lazy {
         val displayMetrics = ApplicationClass.getContext().resources.displayMetrics
@@ -38,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityGeneralSearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         initObservers()
@@ -95,7 +97,7 @@ class MainActivity : AppCompatActivity() {
 //            val preloadingCount = ImagePreviewRVAdapter.SPAN_COUNT * 20 // 사용자가 스크롤하는 동안 미리 로딩할 이미지의 수
             adapter = imagePreviewAdapter
             layoutManager = GridLayoutManager(
-                this@MainActivity,
+                this@GeneralSearchActivity,
                 ImagePreviewRVAdapter.SPAN_COUNT
             )
 //            ).apply {

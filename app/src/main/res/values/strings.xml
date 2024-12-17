@@ -6,4 +6,21 @@
     <string name="unsynchronized_alert_title">동기화 되지 않은 이미지가 있습니다.\n 동기화 하시겠습니까?</string>
     <string name="confirm">확인</string>
     <string name="dismiss">취소</string>
+    <!--    home / general    -->
+    <string name="toggle_option">문서 검색</string>
+    <string name="search_general_hint">찾고싶은 이미지를 검색해 보세요.</string>
+    <string name="search_general_title">이미지를 찾아드릴게요!</string>
+    <string name="search_general_description">
+        언제 찍었는지 모를 이미지를 찾고싶으신가요?\n
+        묘사해주시면 갤러리에서 찾아드릴게요!
+    </string>
+    <string name="search_general_progress_title">이미지들을 분석중입니다...</string>
+
+    <!--    home / doc      -->
+    <string name="search_document_hint">찾고싶은 문서를 검색해 보세요.</string>
+    <string name="search_document_title">문서를 찾아드릴게요!</string>
+    <string name="search_document_description">
+        입력하신 문자열이 포함된 문서를 찾아드릴게요.\n
+        서랍을 열어 문서정리를 해보세요!
+    </string>
 </resources>

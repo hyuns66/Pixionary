@@ -1,4 +1,4 @@
-package com.renovatio.pixionary.ui
+package com.renovatio.pixionary.ui.viewmodel
 
 import android.annotation.SuppressLint
 import android.content.Context
