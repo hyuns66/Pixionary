@@ -1,4 +1,4 @@
-package com.renovatio.pixionary.ui
+package com.renovatio.pixionary.ui.view
 
 import android.app.AlertDialog
 import android.app.Dialog

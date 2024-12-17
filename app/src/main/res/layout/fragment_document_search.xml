@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#000000">
+
+    <ImageView
+        android:id="@+id/add_iv"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="3dp"
+        android:layout_margin="8dp"
+        android:src="@drawable/ic_add"
+        app:tint="@color/white"
+        app:layout_constraintEnd_toStartOf="@id/search_iv"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageView
+        android:id="@+id/search_iv"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="3dp"
+        app:tint="@color/white"
+        android:layout_margin="8dp"
+        android:src="@drawable/ic_search"
+        app:layout_constraintEnd_toStartOf="@id/more_iv"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageView
+        android:id="@+id/more_iv"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="3dp"
+        app:tint="@color/white"
+        android:layout_margin="8dp"
+        android:src="@drawable/ic_more_vert"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/search_general_anim"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        app:lottie_rawRes="@raw/anim_search_document"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/more_iv"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

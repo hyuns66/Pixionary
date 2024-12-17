@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#D6FFA1">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintVertical_bias="0.65"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/general_search_bg"
+        app:layout_constraintEnd_toEndOf="@id/general_search_bg"
+        app:layout_constraintBottom_toTopOf="@id/general_search_bg">
+
+        <TextView
+            android:id="@+id/search_general_title_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text= "@string/search_general_title"
+            android:textColor="@color/black"
+            android:textSize="26sp"
+            android:fontFamily="@font/notosans_bold"
+            app:layout_constraintVertical_bias="0.4"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="@id/general_search_bg"
+            app:layout_constraintEnd_toEndOf="@id/general_search_bg"
+            app:layout_constraintBottom_toTopOf="@id/general_search_bg"/>
+
+        <TextView
+            android:id="@+id/search_general_description_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text= "@string/search_general_description"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:fontFamily="@font/notosans_semibold"
+            app:layout_constraintTop_toBottomOf="@id/search_general_title_tv"
+            app:layout_constraintStart_toStartOf="@id/general_search_bg"
+            app:layout_constraintEnd_toEndOf="@id/general_search_bg"
+            app:layout_constraintBottom_toTopOf="@id/general_search_bg"/>
+
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/general_search_bg"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        android:layout_marginHorizontal="25dp"
+        android:background="@drawable/search_background"
+        android:layout_marginTop="20dp"
+        app:layout_constraintVertical_bias="0.4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <EditText
+        android:id="@+id/general_search_et"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="10dp"
+        android:hint="@string/search_general_hint"
+        android:backgroundTint="@color/transparent"
+        android:maxLines="1"
+        android:inputType="text"
+        android:imeOptions="actionSearch"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/general_search_bg"
+        app:layout_constraintEnd_toStartOf="@id/general_search_iv"
+        app:layout_constraintStart_toStartOf="@id/general_search_bg"
+        app:layout_constraintTop_toTopOf="@id/general_search_bg"/>
+
+    <ImageView
+        android:id="@+id/general_search_iv"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:src="@drawable/ic_search"
+        android:padding="5dp"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintTop_toTopOf="@id/general_search_bg"
+        app:layout_constraintBottom_toBottomOf="@id/general_search_bg"
+        app:layout_constraintEnd_toEndOf="@id/general_search_bg"/>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/search_general_anim"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        app:lottie_rawRes="@raw/anim_search_general"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:layout_constraintVertical_bias="0.35"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/general_search_bg"/>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/extracting_progress_cv"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="26dp"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="25dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <TextView
+                android:id="@+id/loading_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/search_general_progress_title"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:progress="0"
+                android:max="1000"
+                android:layout_marginTop="20dp"
+                android:layout_marginHorizontal="30dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/loading_tv"/>
+
+            <TextView
+                android:id="@+id/progress_count_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/progress_count"
+                android:textSize="14sp"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,7 +1,6 @@
-package com.renovatio.pixionary.ui
+package com.renovatio.pixionary.ui.adapter
 
 import android.graphics.Bitmap
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
