@@ -44,12 +44,19 @@ android {
 
 dependencies {
     val fragment_version = "1.8.3"
+    val camerax_version = "1.5.0-alpha04"
+    val mlkit_version = "16.0.1"
+    val nav_version = "2.8.5"
+
 
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
     // Fragment
     implementation("androidx.fragment:fragment-ktx:$fragment_version")
+    // Jetpack Navigation
+    implementation("androidx.navigation:navigation-fragment-ktx:$nav_version")
+    implementation("androidx.navigation:navigation-ui-ktx:$nav_version")
     // onnx runtime
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.1")
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.9.0")
@@ -63,6 +70,14 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.7.1")
     // ImageLoader
     implementation("io.coil-kt:coil:2.6.0")
+    // CameraX
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    implementation("androidx.camera:camera-view:${camerax_version}")
+    implementation("androidx.camera:camera-extensions:${camerax_version}")
+    // MLkit
+    implementation("com.google.mlkit:text-recognition-korean:${mlkit_version}")
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.google.code.gson:gson:2.11.0")

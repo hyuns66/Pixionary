@@ -2,6 +2,7 @@ package com.renovatio.pixionary.di
 
 import androidx.work.WorkManager
 import com.renovatio.pixionary.data.FeatureRepository
+import com.renovatio.pixionary.domain.usecase.ImageProxyToBitmapUseCase
 import com.renovatio.pixionary.domain.usecase.LoadAllImageUrisUseCase
 import com.renovatio.pixionary.domain.usecase.PrepareUnSynchronizedImagesUseCase
 import com.renovatio.pixionary.domain.usecase.SearchUseCase
@@ -21,6 +22,12 @@ object UseCaseModule {
     @Singleton
     fun providesLoadAllImageUrisUseCase() : LoadAllImageUrisUseCase {
         return LoadAllImageUrisUseCase()
+    }
+
+    @Provides
+    @Singleton
+    fun provideImageProxyToBitmapUseCase() : ImageProxyToBitmapUseCase {
+        return ImageProxyToBitmapUseCase()
     }
 
 //    @Provides
