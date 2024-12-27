@@ -44,7 +44,7 @@ class GeneralSearchActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initObservers()
-        fetchImageItemUris()
+//        fetchImageItemUris()
         val unSynchronizedCount = galleryModel.detectUnSynchronizedImages()
         if (unSynchronizedCount > 0){
             // AlertDialog 생성
@@ -146,57 +146,57 @@ class GeneralSearchActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun fetchImageItemUris(){
-        // 권한이 있는지 확인하고, 없으면 요청
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
-            if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
-                galleryModel.fetchImageItemUris(this)
-            } else {
-                requestPermission(
-                    this,
-                    android.Manifest.permission.READ_MEDIA_IMAGES,
-                    REQUEST_CODE_READ_MEDIA_IMAGES
-                )
-            }
-        } else { // Android 13 미만
-            if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                galleryModel.fetchImageItemUris(this)
-            } else {
-                requestPermission(
-                    this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                    REQUEST_CODE_READ_EXTERNAL_STORAGE
-                )
-            }
-        }
+//    private fun fetchImageItemUris(){
+//        // 권한이 있는지 확인하고, 없으면 요청
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
+//            if (hasPermission(this, android.Manifest.permission.READ_MEDIA_IMAGES)) {
+//                galleryModel.fetchImageItemUris(this)
+//            } else {
+//                requestPermission(
+//                    this,
+//                    android.Manifest.permission.READ_MEDIA_IMAGES,
+//                    REQUEST_CODE_READ_MEDIA_IMAGES
+//                )
+//            }
+//        } else { // Android 13 미만
+//            if (hasPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//                galleryModel.fetchImageItemUris(this)
+//            } else {
+//                requestPermission(
+//                    this,
+//                    android.Manifest.permission.READ_EXTERNAL_STORAGE,
+//                    REQUEST_CODE_READ_EXTERNAL_STORAGE
+//                )
+//            }
+//        }
+//
+//    }
 
-    }
-
-    private fun hasPermission(context: Context, permission: String): Boolean {
-        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestPermission(activity: Activity, permission: String, requestCode: Int) {
-        ActivityCompat.requestPermissions(activity, arrayOf(permission), requestCode)
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            REQUEST_CODE_READ_EXTERNAL_STORAGE, REQUEST_CODE_READ_MEDIA_IMAGES -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    // 권한이 허용되었으므로 이미지 아이템을 가져옴
-                    Toast.makeText(this, "권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
-                    galleryModel.fetchImageItemUris(this)
-                } else {
-                    // 권한이 거부됨
-                    Toast.makeText(this, "권한이 거부되었습니다. 앱을 사용하려면 권한이 필요합니다.", Toast.LENGTH_SHORT)
-                        .show()
-                    exitProcess(0)
-                }
-            }
-        }
-    }
+//    private fun hasPermission(context: Context, permission: String): Boolean {
+//        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+//    }
+//
+//    private fun requestPermission(activity: Activity, permission: String, requestCode: Int) {
+//        ActivityCompat.requestPermissions(activity, arrayOf(permission), requestCode)
+//    }
+//
+//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+//        when (requestCode) {
+//            REQUEST_CODE_READ_EXTERNAL_STORAGE, REQUEST_CODE_READ_MEDIA_IMAGES -> {
+//                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+//                    // 권한이 허용되었으므로 이미지 아이템을 가져옴
+//                    Toast.makeText(this, "권한이 허용되었습니다.", Toast.LENGTH_SHORT).show()
+//                    galleryModel.fetchImageItemUris(this)
+//                } else {
+//                    // 권한이 거부됨
+//                    Toast.makeText(this, "권한이 거부되었습니다. 앱을 사용하려면 권한이 필요합니다.", Toast.LENGTH_SHORT)
+//                        .show()
+//                    exitProcess(0)
+//                }
+//            }
+//        }
+//    }
 
     companion object {
         private const val REQUEST_CODE_READ_EXTERNAL_STORAGE = 1001

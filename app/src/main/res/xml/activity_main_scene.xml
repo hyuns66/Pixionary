@@ -31,6 +31,13 @@
                 motion:framePosition="50"
                 motion:percentHeight="0.0"/>
 
+            <KeyPosition
+                motion:motionTarget="@id/capture_document_button"
+                motion:framePosition="50"
+                motion:keyPositionType="deltaRelative"
+                motion:percentY="0.0"/>
+
+
         </KeyFrameSet>
 
     </Transition>
@@ -55,7 +62,13 @@
             <KeyPosition
                 motion:motionTarget="@id/drawer"
                 motion:framePosition="50"
-                motion:percentHeight="0.0"/>
+                motion:percentHeight="1.0"/>
+
+            <KeyPosition
+                motion:motionTarget="@id/capture_document_button"
+                motion:framePosition="50"
+                motion:keyPositionType="deltaRelative"
+                motion:percentY="1.0"/>
 
         </KeyFrameSet>
 
@@ -153,6 +166,16 @@
             motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintBottom_toBottomOf="parent"/>
+
+        <Constraint
+            android:id="@+id/capture_document_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            motion:srcCompat="@drawable/ic_camera"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintTop_toBottomOf="parent"/>
 
         <Constraint
             android:id="@+id/drawer"
@@ -259,6 +282,15 @@
             motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintTop_toBottomOf="parent"/>
 
+        <Constraint
+            android:id="@+id/capture_document_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="26dp"
+            android:layout_marginBottom="26dp"
+            motion:srcCompat="@drawable/ic_camera"
+            motion:layout_constraintEnd_toEndOf="parent"
+            motion:layout_constraintBottom_toBottomOf="parent"/>
 
         <Constraint
             android:id="@+id/drawer"

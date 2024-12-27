@@ -10,6 +10,12 @@ import com.renovatio.pixionary.domain.model.GalleryFetchOptions
 import java.io.File
 
 class LoadAllImageUrisUseCase() {
+
+    /**
+    안드로이드 Q(API 레벨 29) 이상에서는 더 엄격한 저장소 권한과 보안 정책이 도입되었습니다.
+    이를 통해 앱이 외부 저장소에 접근하는 방식이 변경되었고,
+    이러한 정책 변화에 따라 쿼리 조건을 더 명확하게 설정하는 것이 중요해졌습니다.
+     **/
     @SuppressLint("Range")
     operator fun invoke(context : Context) : MutableList<Pair<String, Uri>>{
         val imageItemUris = mutableListOf<Pair<String, Uri>>()
