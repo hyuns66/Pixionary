@@ -44,7 +44,7 @@
         app:layout_constraintEnd_toEndOf="@id/search_bg"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/image_preview_rv"
+        android:id="@+id/gallery_thumbnail_rv"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"

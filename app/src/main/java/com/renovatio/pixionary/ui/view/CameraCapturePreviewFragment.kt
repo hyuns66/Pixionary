@@ -19,6 +19,8 @@ import com.renovatio.pixionary.R
 import com.renovatio.pixionary.databinding.FragmentCameraCapturePreviewBinding
 import com.renovatio.pixionary.databinding.FragmentCameraPreviewBinding
 import com.renovatio.pixionary.ui.viewmodel.CameraViewModel
+import com.renovatio.pixionary.util.DimensionUtil
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class CameraCapturePreviewFragment : Fragment() {
@@ -33,14 +35,27 @@ class CameraCapturePreviewFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCameraCapturePreviewBinding.inflate(inflater, container, false)
+
+        val behavior = BottomSheetBehavior.from(
+            binding.recognizeTextBottomSheet
+        )
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED // 초기 상태 설정
+        behavior.peekHeight = DimensionUtil.dpToPx(150f, context).toInt() // 기본 높이
+        behavior.isHideable = false // 숨길 수 있는지 여부 설정
+
+        binding.backIv.setOnClickListener {
+            findNavController().popBackStack()
+        }
+        binding.imgSaveTv.setOnClickListener{
+            cameraModel.saveImage()
+            findNavController().popBackStack(R.id.homeFragment, false)
+        }
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val behavior = BottomSheetBehavior.from(
-            binding.recognizeTextBottomSheet
-        )
         initObservers()
     }
 
@@ -73,6 +88,13 @@ class CameraCapturePreviewFragment : Fragment() {
                             findNavController().popBackStack()
                         }
                     }
+                }
+            }
+        }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                cameraModel.toastMessageEvents.collectLatest {
+                    Toast.makeText(context, context.getString(it), Toast.LENGTH_SHORT).show()
                 }
             }
         }

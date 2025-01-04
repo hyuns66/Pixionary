@@ -7,7 +7,16 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.renovatio.pixionary.ui.view.HomeFragment"
-        android:label="HomeFragment" />
+        android:label="HomeFragment">
+        <action
+            android:id="@+id/action_general_search"
+            app:destination="@id/generalSearchFragment" >
+            <argument
+                android:name="query"
+                app:argType="string"
+                android:defaultValue=""/>
+        </action>
+    </fragment>
     <fragment
         android:id="@+id/cameraPreviewFragment"
         android:name="com.renovatio.pixionary.ui.view.CameraPreviewFragment"
@@ -16,4 +25,13 @@
         android:id="@+id/cameraCapturePreviewFragment"
         android:name="com.renovatio.pixionary.ui.view.CameraCapturePreviewFragment"
         android:label="CameraCapturePreviewFragment" />
+    <fragment
+        android:id="@+id/generalSearchFragment"
+        android:name="com.renovatio.pixionary.ui.view.GeneralSearchFragment"
+        android:label="GeneralSearchFragment">
+        <argument
+            android:name="query"
+            app:argType="string"
+            android:defaultValue=""/>
+    </fragment>
 </navigation>

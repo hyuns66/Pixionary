@@ -8,7 +8,7 @@ class SimilarityCalculator(private var query : Array<FloatArray>, private var im
         query = normalizeVector(query)
         val normalizedFeatures = normalizeVector(imageFeatures.map{it.feature}.toTypedArray())
         imageFeatures = imageFeatures.zip(normalizedFeatures).map {
-            Feature(it.first.path, it.second)
+            Feature(it.first.uri, it.second)
         }
     }
 

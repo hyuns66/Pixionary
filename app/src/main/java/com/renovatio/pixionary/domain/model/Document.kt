@@ -1,8 +1,9 @@
 package com.renovatio.pixionary.domain.model
 
 import android.net.Uri
+import io.objectbox.annotation.Unique
 
-data class Feature (
+data class Document (
     val uri : Uri,
-    val feature : FloatArray
+    val text : String,
 )

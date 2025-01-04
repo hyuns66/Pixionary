@@ -2,6 +2,10 @@
     <!--    core    -->
     <string name="app_name">Pixionary</string>
     <string name="progress_count">%1$d / </string>
+    <!--    alert   -->
+    <string name="accept">확인</string>
+    <string name="save">저장</string>
+    <string name="error_failed_to_save_image">이미지 저장에 실패했습니다. 다시 시도해주세요.</string>
     <!--    alert    -->
     <string name="unsynchronized_alert_title">동기화 되지 않은 이미지가 있습니다.\n 동기화 하시겠습니까?</string>
     <string name="confirm">확인</string>

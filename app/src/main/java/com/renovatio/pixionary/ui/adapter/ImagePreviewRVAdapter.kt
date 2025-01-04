@@ -1,6 +1,7 @@
 package com.renovatio.pixionary.ui.adapter
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -13,7 +14,7 @@ import com.renovatio.pixionary.databinding.ItemGalleryPreviewBinding
 
 class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePreviewRVAdapter.ViewHolder>() {
 
-    private var imagePaths = mutableListOf<String>()
+    private var imageUris = mutableListOf<Uri>()
     // dp to px
     private val itemHeightPx = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
@@ -22,9 +23,9 @@ class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePrev
     ).toInt()
 
     class ViewHolder(val binding : ItemGalleryPreviewBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(imagePath : String, itemWidth : Int, itemHeight : Int){
+        fun bind(imageUri: Uri, itemWidth : Int, itemHeight : Int){
             val request = ImageRequest.Builder(ApplicationClass.getContext())
-                .data(imagePath)
+                .data(imageUri)
                 .crossfade(true)
                 .target(binding.itemIv)
                 .bitmapConfig(Bitmap.Config.RGB_565)
@@ -43,16 +44,16 @@ class ImagePreviewRVAdapter(val itemWidth: Int) : RecyclerView.Adapter<ImagePrev
     }
 
     override fun getItemCount(): Int {
-        return imagePaths.size
+        return imageUris.size
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(imagePaths[position], itemWidth, itemHeightPx)
+        holder.bind(imageUris[position], itemWidth, itemHeightPx)
     }
 
-    fun initImagePaths(newImgPaths : List<String>){
-        imagePaths.clear()
-        imagePaths.addAll(newImgPaths)
+    fun initImagePaths(newImageUris : List<Uri>){
+        imageUris.clear()
+        imageUris.addAll(newImageUris)
         notifyDataSetChanged()
     }
 

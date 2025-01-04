@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -20,6 +21,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import com.renovatio.pixionary.ApplicationClass
 import com.renovatio.pixionary.R
 import com.renovatio.pixionary.databinding.FragmentHomeBinding
@@ -75,6 +77,18 @@ class HomeFragment : Fragment() {
         binding.captureDocumentButton.setOnClickListener {
             it.findNavController().navigate(R.id.cameraPreviewFragment)
         }
+        binding.generalSearchIv.setOnClickListener {
+            startGeneralSearchFragment(binding.generalSearchEt.text.toString())
+        }
+        binding.generalSearchEt.setOnEditorActionListener { v, actionId, event ->
+            var handled = false
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                startGeneralSearchFragment(v.text.toString())
+                handled = true
+            }
+            handled
+        }
+
         return binding.root
     }
 
@@ -117,7 +131,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
     private fun startFeatureExtracting() {
         // 권한이 있는지 확인하고, 없으면 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 이상
@@ -138,6 +151,10 @@ class HomeFragment : Fragment() {
     }
     private fun hasPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    }
+    private fun startGeneralSearchFragment(query : String){
+        val action = HomeFragmentDirections.actionGeneralSearch(query = query)
+        findNavController().navigate(action)
     }
     companion object {
 //        private val REQUIRED_PERMISSIONS = arrayOf(

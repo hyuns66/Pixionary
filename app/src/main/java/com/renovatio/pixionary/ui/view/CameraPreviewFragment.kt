@@ -21,6 +21,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
@@ -87,6 +88,7 @@ class CameraPreviewFragment : Fragment() {
         binding.cameraShutterBtn.setOnClickListener {
             capturePhoto()
         }
+        binding.cameraPreview.scaleType = PreviewView.ScaleType.FIT_CENTER
     }
 
     override fun onDestroyView() {
@@ -129,25 +131,6 @@ class CameraPreviewFragment : Fragment() {
     private fun capturePhoto() {
         val imageCapture = imageCapture ?: return
 
-        // 이미지 저장할 이름, 확장자, 경로
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.KOREA)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Pixionary")
-            }
-        }
-
-        // Create output options object which contains file + metadata
-        val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(
-                requireActivity().contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-            .build()
-
         // Set up image capture listener, which is triggered after photo has
         // been taken
         imageCapture.takePicture(
@@ -180,8 +163,6 @@ class CameraPreviewFragment : Fragment() {
 
     companion object {
         val TAG = "CameraXFragment"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        internal const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         var isOffline = false // prevent app crash when goes offline
     }
