@@ -2,6 +2,7 @@ package com.renovatio.pixionary.di
 
 import android.content.Context
 import androidx.work.WorkManager
+import com.renovatio.pixionary.data.DocumentDTO
 import com.renovatio.pixionary.data.FeatureDTO
 import com.renovatio.pixionary.data.ObjectBox.store
 import com.renovatio.pixionary.util.VisionTransformerRunner
@@ -21,6 +22,11 @@ object SingletonModule {
     @Singleton
     fun provideFeatureBox(): Box<FeatureDTO> {
         return store.boxFor(FeatureDTO::class)
+    }
+    @Provides
+    @Singleton
+    fun provideDocumentBox(): Box<DocumentDTO> {
+        return store.boxFor(DocumentDTO::class)
     }
     @Singleton
     @Provides

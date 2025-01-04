@@ -28,10 +28,36 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "2:2534511863940260607",
+      "lastPropertyId": "3:8776529102143018816",
+      "name": "DocumentDTO",
+      "properties": [
+        {
+          "id": "1:7214178838864805842",
+          "name": "uriString",
+          "indexId": "2:8438680890773024976",
+          "type": 9,
+          "flags": 2080
+        },
+        {
+          "id": "2:1204609652276752228",
+          "name": "text",
+          "type": 9
+        },
+        {
+          "id": "3:8776529102143018816",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "1:8430506066083993792",
-  "lastIndexId": "1:5069433966205158304",
+  "lastEntityId": "2:2534511863940260607",
+  "lastIndexId": "2:8438680890773024976",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

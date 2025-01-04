@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt") // Only for Kotlin projects
     id("io.objectbox") // Apply last
     id("com.google.dagger.hilt.android")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {

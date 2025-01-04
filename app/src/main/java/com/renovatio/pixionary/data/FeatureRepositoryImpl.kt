@@ -1,6 +1,7 @@
 package com.renovatio.pixionary.data
 
-import android.util.Log
+import android.net.Uri
+import com.renovatio.pixionary.domain.model.Document
 import com.renovatio.pixionary.domain.model.Feature
 import io.objectbox.Box
 import io.objectbox.exception.UniqueViolationException
@@ -9,11 +10,12 @@ import javax.inject.Singleton
 
 @Singleton
 class FeatureRepositoryImpl @Inject constructor(
-    private val featureBox : Box<FeatureDTO>
+    private val featureBox : Box<FeatureDTO>,
+    private val documentBox : Box<DocumentDTO>
 ) : FeatureRepository {
-    override fun saveFeatures(key: List<String>, value: Array<FloatArray>) {
+    override fun saveFeatures(key: List<Uri>, value: Array<FloatArray>) {
         val datas = key.zip(value).map { (k, v) ->
-            FeatureDTO(path = k, feature = v)
+            FeatureDTO(uriString = k.toString(), feature = v)
         }
         for (data in datas){
             try {
@@ -26,7 +28,21 @@ class FeatureRepositoryImpl @Inject constructor(
 
     override fun loadFeatures(): List<Feature> {
         val items = featureBox.all
-        Log.d("LILILISDfjlskd", items.size.toString())
+        val results = items.map{
+            it.toModel()
+        }
+        return results
+    }
+
+    override fun saveDocumentRecognitionResult(uri: Uri, text: String) {
+        val data = DocumentDTO(uri.toString(), text)
+        try {
+            documentBox.put(data)
+        } catch (_: UniqueViolationException){  }
+    }
+
+    override fun loadAllDocumentImages(): List<Document> {
+        val items = documentBox.all
         val results = items.map{
             it.toModel()
         }

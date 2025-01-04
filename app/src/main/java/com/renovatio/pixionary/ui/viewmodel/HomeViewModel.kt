@@ -25,9 +25,9 @@ class HomeViewModel @Inject constructor(
     private val loadAllImageUris : LoadAllImageUrisUseCase,
     private val vitRunner: VitWorkManagerUseCase
     ) : ViewModel() {
-    private val _imageItemUris = MutableLiveData<MutableList<Pair<String, Uri>>>(mutableListOf())
-    val imageItemUris : LiveData<MutableList<Pair<String, Uri>>> get() = _imageItemUris
-    private val _unSynchronizedItems = mutableListOf<MutableList<Pair<String, Uri>>>()
+    private val _imageItemUris = MutableLiveData<MutableList<Uri>>(mutableListOf())
+    val imageItemUris : LiveData<MutableList<Uri>> get() = _imageItemUris
+    private val _unSynchronizedItems = mutableListOf<MutableList<Uri>>()
     val unSynchronizedItems get() = _unSynchronizedItems
     private val _totalProgressCount = MutableLiveData(0)
     val totalProgressCount get() = _totalProgressCount
@@ -41,9 +41,9 @@ class HomeViewModel @Inject constructor(
     // 전체 이미지들중 featureStore에 없는 이미지들만 골라서 input Data 구축
     fun detectUnSynchronizedImages(){
         _totalProgressCount.value = 0
-        val dummyPair = imageItemUris.value!![0]
+        val dummyItem = imageItemUris.value!![0]
         _unSynchronizedItems.clear()
-        _unSynchronizedItems.addAll(prepareUnSynchronizedImages(imageItemUris.value!!, dummyPair))
+        _unSynchronizedItems.addAll(prepareUnSynchronizedImages(imageItemUris.value!!, dummyItem))
         startVitRunner()
         _totalProgressCount.value = _unSynchronizedItems.size * 12
     }

@@ -44,15 +44,13 @@ class VitBackgroundWorker @AssistedInject constructor(
     private val prepareUnSynchronizedImages: PrepareUnSynchronizedImagesUseCase,
     private val loadAllImageUris : LoadAllImageUrisUseCase
 ) : CoroutineWorker(context, params) {
-    private lateinit var inputItems : MutableList<MutableList<Pair<String, Uri>>>
+    private lateinit var inputItems : MutableList<MutableList<Uri>>
     private var featureProgressCount = 0
     override suspend fun doWork(): Result = coroutineScope{
         try{
-            Log.d("workRequestststst", "start")
             setForeground(createForegroundInfo(0))
 
             val imageItemUris = loadAllImageUris(applicationContext)
-            Log.d("workRequestststst", "imageItemUris size : ${imageItemUris.size}")
             // 작업에 필요한 데이터셋 생성 밑 progress 정보 전달
             inputItems = prepareUnSynchronizedImages(imageItemUris, imageItemUris[0])
             val maxInputImagesCount = inputItems.size * VisionTransformerRunner.BATCH_SIZE
@@ -72,10 +70,8 @@ class VitBackgroundWorker @AssistedInject constructor(
                 for (uris in inputItems) {
                     val job = CoroutineScope(myDispatcher).launch{
                         val bitmapList = arrayListOf<Bitmap>()
-                        val pathList = arrayListOf<String>()
-                        for (uriPair in uris){
-                            val path = uriPair.first
-                            val uri = uriPair.second
+                        val uriList = arrayListOf<Uri>()
+                        for (uri in uris){
                             val bitmap =
                                 if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
                                     ImageDecoder.decodeBitmap(
@@ -92,14 +88,13 @@ class VitBackgroundWorker @AssistedInject constructor(
                                     MediaStore.Images.Media.getBitmap(applicationContext.contentResolver, uri)
                                 }
                             bitmapList.add(bitmap)
-                            pathList.add(path)
+                            uriList.add(uri)
                         }
                         val features = visionRunner.runSession(bitmapList)
 
-                        featureStoreRepository.saveFeatures(pathList, features)
+                        featureStoreRepository.saveFeatures(uriList, features)
                         featureProgressCount += VisionTransformerRunner.BATCH_SIZE
                         val progress = currentProgress.addAndGet(VisionTransformerRunner.BATCH_SIZE)
-                        Log.d("workRequestststst", progress.toString())
                         setProgress(workDataOf(PROGRESS_INFO_KEY to progress))
                     }
                     jobs.add(job)
