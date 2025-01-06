@@ -34,7 +34,6 @@ import androidx.navigation.navGraphViewModels
 import com.google.common.util.concurrent.ListenableFuture
 import com.renovatio.pixionary.R
 import com.renovatio.pixionary.databinding.FragmentCameraPreviewBinding
-import com.renovatio.pixionary.databinding.FragmentGeneralHomeBinding
 import com.renovatio.pixionary.ui.viewmodel.CameraViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.internal.lifecycle.HiltViewModelFactory
