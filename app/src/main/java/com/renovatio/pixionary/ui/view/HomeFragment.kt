@@ -88,7 +88,17 @@ class HomeFragment : Fragment() {
             }
             handled
         }
-
+        binding.documentSearchIv.setOnClickListener {
+            startDocumentSearchFragment(binding.generalSearchEt.text.toString())
+        }
+        binding.documentSearchEt.setOnEditorActionListener { v, actionId, event ->
+            var handled = false
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                startDocumentSearchFragment(v.text.toString())
+                handled = true
+            }
+            handled
+        }
         return binding.root
     }
 
@@ -154,6 +164,10 @@ class HomeFragment : Fragment() {
     }
     private fun startGeneralSearchFragment(query : String){
         val action = HomeFragmentDirections.actionGeneralSearch(query = query)
+        findNavController().navigate(action)
+    }
+    private fun startDocumentSearchFragment(query : String){
+        val action = HomeFragmentDirections.actionDocumentSearch(query = query)
         findNavController().navigate(action)
     }
     companion object {

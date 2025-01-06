@@ -5,16 +5,9 @@
   "entities": [
     {
       "id": "1:8430506066083993792",
-      "lastPropertyId": "3:1852028144413412605",
+      "lastPropertyId": "4:3417728786335832747",
       "name": "FeatureDTO",
       "properties": [
-        {
-          "id": "1:2967832838131014911",
-          "name": "path",
-          "indexId": "1:5069433966205158304",
-          "type": 9,
-          "flags": 2080
-        },
         {
           "id": "2:8320943768803004557",
           "name": "feature",
@@ -25,6 +18,13 @@
           "name": "id",
           "type": 6,
           "flags": 1
+        },
+        {
+          "id": "4:3417728786335832747",
+          "name": "uriString",
+          "indexId": "3:5346109704691780790",
+          "type": 9,
+          "flags": 2080
         }
       ],
       "relations": []
@@ -57,14 +57,18 @@
     }
   ],
   "lastEntityId": "2:2534511863940260607",
-  "lastIndexId": "2:8438680890773024976",
+  "lastIndexId": "3:5346109704691780790",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
-  "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredIndexUids": [
+    5069433966205158304
+  ],
+  "retiredPropertyUids": [
+    2967832838131014911
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

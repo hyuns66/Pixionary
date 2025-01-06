@@ -174,7 +174,7 @@
             app:layout_constraintBottom_toBottomOf="parent">
 
             <EditText
-                android:id="@+id/ddocument_search_et"
+                android:id="@+id/document_search_et"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

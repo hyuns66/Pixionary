@@ -5,6 +5,7 @@ import com.renovatio.pixionary.domain.model.Document
 import com.renovatio.pixionary.domain.model.Feature
 import io.objectbox.Box
 import io.objectbox.exception.UniqueViolationException
+import io.objectbox.query.QueryBuilder
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,9 +42,19 @@ class FeatureRepositoryImpl @Inject constructor(
         } catch (_: UniqueViolationException){  }
     }
 
-    override fun loadAllDocumentImages(): List<Document> {
+    override fun loadAllDocuments(): List<Document> {
         val items = documentBox.all
         val results = items.map{
+            it.toModel()
+        }
+        return results
+    }
+
+    override fun loadQueryDocuments(query: String): List<Document> {
+        val boxQuery = documentBox.query()
+            .contains(DocumentDTO_.text, query, QueryBuilder.StringOrder.CASE_SENSITIVE)
+            .build()
+        val results = boxQuery.find().map{
             it.toModel()
         }
         return results

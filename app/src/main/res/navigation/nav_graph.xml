@@ -16,6 +16,15 @@
                 app:argType="string"
                 android:defaultValue=""/>
         </action>
+        <action
+            android:id="@+id/action_document_search"
+            app:destination="@id/documentSearchFragment" >
+            <argument
+                android:name="query"
+                app:argType="string"
+                android:defaultValue=""/>
+        </action>
+
     </fragment>
     <fragment
         android:id="@+id/cameraPreviewFragment"
@@ -29,6 +38,15 @@
         android:id="@+id/generalSearchFragment"
         android:name="com.renovatio.pixionary.ui.view.GeneralSearchFragment"
         android:label="GeneralSearchFragment">
+        <argument
+            android:name="query"
+            app:argType="string"
+            android:defaultValue=""/>
+    </fragment>
+    <fragment
+        android:id="@+id/documentSearchFragment"
+        android:name="com.renovatio.pixionary.ui.view.DocumentSearchFragment"
+        android:label="DocumentSearchFragment">
         <argument
             android:name="query"
             app:argType="string"
